@@ -1,0 +1,130 @@
+/* =========================================================================
+   Recherche d'un lieu et choix sur la carte (ChoixLieu.jsx)
+   ========================================================================= */
+.choix-lieu,
+.carte-choix {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.champ-recherche-lieu {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 8px 0 16px;
+  border-radius: var(--rayon-champ);
+  background: var(--surface);
+  color: var(--texte-secondaire);
+}
+
+.champ-recherche-lieu:focus-within {
+  background: var(--blanc);
+  box-shadow: inset 0 0 0 2px var(--encre);
+}
+
+.champ-recherche-lieu input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font-size: 16px;
+  color: var(--encre);
+  outline: none;
+}
+
+.champ-recherche-lieu input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.champ-recherche-lieu__effacer {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: #dadadd;
+}
+
+.ligne-lieu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 8px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--bordure);
+  background: none;
+  text-align: left;
+}
+
+.ligne-lieu:hover {
+  background: var(--surface-selection);
+}
+
+.ligne-lieu--action {
+  min-height: 52px;
+  margin-top: 12px;
+  border-bottom: 0;
+}
+
+.ligne-lieu__nom {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.ligne-lieu__nom strong {
+  font-weight: 700;
+}
+
+.ligne-lieu__ville {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--texte-secondaire);
+}
+
+.choix-lieu__pied {
+  position: sticky;
+  bottom: -20px;
+  margin-top: auto;
+  padding: 16px 0 0;
+  background: var(--blanc);
+}
+
+.carte-choix__carte {
+  position: relative;
+  flex: 1;
+  min-height: 320px;
+  border-radius: var(--rayon-carte);
+  overflow: hidden;
+}
+
+/* La carte remplit toute la zone (sa hauteur vient de la fenêtre, pas d'une valeur fixe). */
+.carte-choix__carte .carte-osm {
+  position: absolute;
+  inset: 0;
+  height: auto;
+}
+
+/* Épingle fixe au centre : la pointe désigne le centre de la carte. */
+.carte-choix__epingle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 500;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+  filter: drop-shadow(0 4px 6px rgba(18, 18, 18, 0.3));
+}
+
+.carte-choix__localiser {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 500;
+}

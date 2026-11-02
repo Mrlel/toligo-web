@@ -1,0 +1,30 @@
+{
+  "name": "toligo-web",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Application web client Tôligo : envoi de colis et location de box.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "lucide-react": "^1.57.0",
+    "motion": "13.4.6",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-leaflet": "^5.0.0",
+    "react-router-dom": "^7.18.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.2",
+    "vite": "^8.3.4"
+  },
+  "overrides": {
+    "framer-motion": "13.4.6",
+    "motion-dom": "13.4.5",
+    "motion-utils": "13.3.0"
+  }
+}

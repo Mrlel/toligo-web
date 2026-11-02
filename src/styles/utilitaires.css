@@ -1,0 +1,74 @@
+/* =========================================================================
+   Utilitaires : petites classes réutilisables (texte, alignement).
+
+   Chargé APRÈS les composants et la mise en page : une classe utilitaire
+   ajoutée à un composant (« bloc-gris rangee ») l'emporte sur lui.
+   ========================================================================= */
+
+/* ------------------------------------------------------------------------
+   Petits utilitaires de texte (repris de TTextes)
+   ------------------------------------------------------------------------ */
+.titre {
+  font-family: var(--police-titre);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.texte-secondaire {
+  color: var(--texte-secondaire);
+}
+
+.texte-discret {
+  color: var(--texte-discret);
+}
+
+.texte-accent {
+  color: var(--accent);
+}
+
+.texte-accent-fonce {
+  color: var(--accent-fonce);
+  font-weight: 700;
+}
+
+.texte-erreur {
+  color: var(--erreur);
+}
+
+.gras {
+  font-weight: 700;
+}
+
+.demi-gras {
+  font-weight: 600;
+}
+
+/* « COLLECTE », « DESTINATAIRES » : petites capitales espacées. */
+.etiquette-section {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--texte-secondaire);
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.une-ligne {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pile {
+  display: flex;
+  flex-direction: column;
+}
+
+.rangee {
+  display: flex;
+  align-items: center;
+}
+
+.extensible {
+  flex: 1;
+  min-width: 0;
+}

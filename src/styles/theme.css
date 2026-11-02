@@ -1,0 +1,151 @@
+/* =========================================================================
+   Charte Tôligo : mêmes couleurs, polices et arrondis que l'application
+   mobile (toligo_mobile/packages/toligo_core/lib/src/theme/couleurs.dart).
+
+   Ne jamais écrire une couleur en dur dans un écran : passer par ces
+   variables, pour faire évoluer la charte en un seul endroit.
+   ========================================================================= */
+:root {
+  /* --- Texte --- */
+  --encre: #121212;
+  --texte-secondaire: #616168;
+  --texte-discret: #76767c;
+  --texte-desactive: #8e8e94;
+
+  /* --- Fonds et bordures --- */
+  --blanc: #ffffff;
+  --fond: #ffffff;
+  --surface: #f5f5f6;
+  --surface-alt: #f2f2f3;
+  --surface-selection: #f8f8f9;
+  --bordure: #eaeaec;
+  --bordure-legere: #f0f0f2;
+  --separateur: #dedee1;
+  --gris-rond: #cbcbd0;
+  --pointilles: #c3c3c8;
+  --gris-sur-noir: #d2d2d6;
+  --fond-carte: #eeeef0;
+  --voile-blanc: rgba(255, 255, 255, 0.86); /* en-tête translucide de la page publique */
+  --nuit-carte: rgba(255, 255, 255, 0.07); /* cartes posées sur un fond noir */
+  --nuit-bordure: rgba(255, 255, 255, 0.12);
+
+  /* --- Accent (orange Tôligo) --- */
+  --accent: #c94a0a;
+  --accent-survol: #b04008;
+  --accent-clair: #fdebdd;
+  --accent-fonce: #8f3507;
+  --accent-pale: #fff7f1;
+  --accent-vif: #e86a2a;
+
+  /* --- États --- */
+  --succes: #0e7a52;
+  --succes-clair: #e3f4ec;
+  --succes-fonce: #0a5a3c;
+  --succes-texte: #1f7a45;
+  --erreur: #b42318;
+  --erreur-clair: #fdecea;
+  --info: #3f3f45;
+
+  /* --- Arrondis --- */
+  --rayon-champ: 18px;
+  --rayon-carte: 24px;
+  --rayon-option: 22px;
+  --rayon-petit: 14px;
+  --rayon-pilule: 999px;
+
+  /* --- Ombres --- */
+  --ombre-carte: 0 8px 24px rgba(18, 18, 18, 0.06);
+  --ombre-carte-survol: 0 12px 30px rgba(18, 18, 18, 0.1);
+  --ombre-flottante: 0 4px 14px rgba(18, 18, 18, 0.12);
+
+  /* --- Polices --- */
+  --police-titre: 'Sora', system-ui, sans-serif;
+  --police-corps: 'DM Sans', system-ui, sans-serif;
+
+  /* --- Mise en page --- */
+  --marge-ecran: 20px;
+  --largeur-barre-laterale: 264px;
+}
+
+/* ------------------------------------------------------------------------
+   Base
+   ------------------------------------------------------------------------ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--fond);
+  color: var(--encre);
+  font-family: var(--police-corps);
+  font-size: 15px;
+  line-height: 1.35;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--police-titre);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+img {
+  max-width: 100%;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--texte-discret);
+  opacity: 1;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(201, 74, 10, 0.45);
+  outline-offset: 2px;
+}
+
+/* Texte lu par les lecteurs d'écran seulement. */
+.invisible {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

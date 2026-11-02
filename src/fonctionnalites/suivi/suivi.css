@@ -1,0 +1,500 @@
+/* =========================================================================
+   Mes envois, suivi d'un colis, preuves, révision de format, avis, incident.
+   ========================================================================= */
+
+/* --- Mes envois --- */
+.carte-envoi {
+  padding: 14px;
+}
+
+.carte-envoi--urgente,
+.carte-envoi--urgente[role='button']:hover {
+  border: 2px solid var(--accent);
+  background: var(--accent-pale);
+  box-shadow: none;
+}
+
+.carte-envoi__code {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.carte-envoi__ligne {
+  font-size: 13.5px;
+  color: var(--texte-secondaire);
+}
+
+.carte-envoi__ligne strong {
+  font-weight: 600;
+  color: var(--encre);
+}
+
+.ligne-termine {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--rayon-option);
+}
+
+/* --- Suivi : carte en fond et panneau blanc par-dessus (téléphone) --- */
+.suivi {
+  position: relative;
+  min-height: 100dvh;
+  background: var(--fond-carte);
+}
+
+.suivi__carte {
+  position: sticky;
+  top: 0;
+  height: 46dvh;
+}
+
+.suivi__boutons {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.suivi__boutons > * {
+  pointer-events: auto;
+}
+
+.pastille-position {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  margin: 0 auto;
+  padding: 0 14px;
+  white-space: nowrap;
+  border-radius: var(--rayon-pilule);
+  background: var(--blanc);
+  box-shadow: var(--ombre-flottante);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pastille-position__point {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--texte-discret);
+}
+
+.pastille-position__point--direct {
+  background: var(--accent);
+}
+
+.suivi__panneau {
+  position: relative;
+  z-index: 10;
+  margin-top: -32px;
+  padding: 10px var(--marge-ecran) 24px;
+  border-radius: 32px 32px 0 0;
+  background: var(--blanc);
+  box-shadow: 0 -8px 30px rgba(18, 18, 18, 0.1);
+}
+
+.suivi__poignee {
+  width: 38px;
+  height: 4px;
+  margin: 0 auto 14px;
+  border-radius: 2px;
+  background: var(--separateur);
+}
+
+.suivi__titre {
+  margin-top: 4px;
+  font-size: 20px;
+}
+
+@media (min-width: 960px) {
+  .suivi {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 460px;
+    background: var(--fond);
+  }
+
+  .suivi__carte {
+    height: 100dvh;
+  }
+
+  /* Les boutons de zoom passent sous le bouton retour. */
+  .suivi__carte .leaflet-top.leaflet-left {
+    top: 64px;
+  }
+
+  .suivi__panneau {
+    margin-top: 0;
+    max-height: 100dvh;
+    overflow-y: auto;
+    padding: 28px 28px 32px;
+    border-radius: 0;
+    border-left: 1px solid var(--bordure-legere);
+    box-shadow: none;
+  }
+
+  .suivi__poignee {
+    display: none;
+  }
+}
+
+/* Frise verticale des jalons. */
+.frise__jalon {
+  display: flex;
+  gap: 12px;
+}
+
+.frise__colonne {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 22px;
+}
+
+.frise__trait {
+  flex: 1;
+  width: 2px;
+  background: var(--bordure);
+}
+
+.frise__trait--fait {
+  background: var(--encre);
+}
+
+.frise__puce {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--separateur);
+}
+
+.frise__puce--fait {
+  border: 0;
+  background: var(--encre);
+  color: var(--blanc);
+}
+
+.frise__puce--en-cours {
+  border-color: var(--accent);
+  background: var(--blanc);
+}
+
+.frise__puce--en-cours::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.frise__texte {
+  flex: 1;
+  min-width: 0;
+  padding: 1px 0 18px;
+}
+
+.frise__libelle {
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.frise__libelle span:first-child {
+  flex: 1;
+}
+
+.lien-preuve {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.lien-preuve:hover {
+  text-decoration: underline;
+}
+
+.bloc-paiement {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--rayon-option);
+  background: var(--surface);
+}
+
+/* --- Preuves --- */
+.carte-preuve {
+  padding: 14px;
+  border-radius: var(--rayon-carte);
+  background: var(--blanc);
+}
+
+.preuve-a-venir {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1.5px dashed var(--gris-rond);
+  border-radius: var(--rayon-carte);
+}
+
+.image-protegee {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--rayon-champ);
+  background: var(--surface);
+  color: var(--texte-discret);
+}
+
+.image-protegee img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Une seule colonne, même sur ordinateur : les preuves se lisent dans l'ordre. */
+.grille-preuves {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+/* --- Format révisé --- */
+.photo-colis {
+  position: relative;
+  height: 220px;
+  border-radius: var(--rayon-carte);
+  overflow: hidden;
+}
+
+.photo-colis--vide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--texte-desactive);
+  font-size: 13px;
+  font-weight: 600;
+  background: repeating-linear-gradient(-45deg, #f2f2f3 0 13px, #e8e8eb 13px 20px);
+}
+
+.photo-colis__legende {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 12px;
+  background: rgba(18, 18, 18, 0.78);
+  color: var(--blanc);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.format-compare {
+  position: relative;
+  padding: 14px;
+  border-radius: var(--rayon-option);
+  border: 1px solid var(--bordure-legere);
+  background: var(--blanc);
+  box-shadow: var(--ombre-carte);
+}
+
+.format-compare--propose {
+  border: 2px solid var(--accent);
+  background: var(--accent-pale);
+  box-shadow: none;
+}
+
+.format-compare img,
+.format-compare .illustration-secours {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+/* Le libellé ne passe pas sous l'illustration, posée en haut à droite. */
+.format-compare__titre {
+  padding-right: 56px;
+}
+
+/* --- Colis livré --- */
+.bandeau-livre {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 26px;
+  background: var(--succes-clair);
+}
+
+.bandeau-livre__coche {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--succes);
+  color: var(--blanc);
+}
+
+.etoiles {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+
+.etoiles button {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+}
+
+.etoiles button:hover {
+  background: var(--surface-selection);
+}
+
+.etiquette-avis {
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--separateur);
+  border-radius: var(--rayon-pilule);
+  background: var(--blanc);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--info);
+}
+
+.etiquette-avis--choisie {
+  border: 1.5px solid var(--encre);
+  background: var(--surface-alt);
+  color: var(--encre);
+  font-weight: 600;
+}
+
+/* --- Incident --- */
+.choix-type {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 50px;
+  padding: 0 14px;
+  border: 1px solid var(--bordure);
+  border-radius: 18px;
+  background: var(--blanc);
+  font-size: 15px;
+  text-align: left;
+}
+
+.choix-type:hover {
+  background: var(--surface-selection);
+}
+
+.choix-type--choisi {
+  padding: 0 13px;
+  border: 2px solid var(--encre);
+  background: var(--surface-selection);
+  font-weight: 600;
+}
+
+.choix-type__rond {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--gris-rond);
+  background: var(--blanc);
+}
+
+.choix-type--choisi .choix-type__rond {
+  border: 6px solid var(--encre);
+}
+
+.ajout-photo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 72px;
+  height: 72px;
+  border: 1.5px dashed var(--pointilles);
+  border-radius: 18px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ajout-photo:hover {
+  background: var(--surface-selection);
+}
+
+.miniature {
+  position: relative;
+  width: 72px;
+  height: 72px;
+}
+
+.miniature img {
+  width: 100%;
+  height: 100%;
+  border-radius: 18px;
+  object-fit: cover;
+}
+
+.miniature button {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--encre);
+  color: var(--blanc);
+}
+
+/* Sous le code de dépôt : le colis ne tient pas, le box est inutilisable. */
+.actions-depot {
+  display: flex;
+  flex-direction: column;
+  margin-top: 6px;
+}
+
+.actions-depot .bouton {
+  color: var(--texte-secondaire);
+}

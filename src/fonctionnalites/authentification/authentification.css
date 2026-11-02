@@ -1,0 +1,214 @@
+/* =========================================================================
+   Connexion, inscription, code SMS.
+   ========================================================================= */
+
+/* ------------------------------------------------------------------------
+   Connexion, inscription, code (CadreAuthentification)
+   ------------------------------------------------------------------------ */
+.auth {
+  min-height: 100dvh;
+}
+
+.auth__visuel {
+  display: none;
+}
+
+.auth__panneau {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 9px 24px 0;
+}
+
+.auth__illustration-coin {
+  position: absolute;
+  top: 11px;
+  right: 22px;
+  width: 112px;
+  pointer-events: none;
+}
+
+.auth__corps {
+  flex: 1;
+}
+
+.auth__titre {
+  font-size: 28px;
+  letter-spacing: -0.5px;
+}
+
+.auth__texte {
+  margin-top: 8px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--texte-secondaire);
+}
+
+.auth__formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.auth__pied {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 0 calc(24px + env(safe-area-inset-bottom));
+  background: var(--fond);
+}
+
+.auth__lien-bas {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  font-size: 14.5px;
+  color: var(--texte-secondaire);
+}
+
+.auth__lien-bas a {
+  font-weight: 700;
+  color: var(--encre);
+}
+
+@media (min-width: 960px) {
+  .auth {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 48px;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 32px 48px;
+  }
+
+  .auth__visuel {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .auth__accroche {
+    font-family: var(--police-titre);
+    font-size: 30px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+  }
+
+  .auth__accroche em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .auth__panneau {
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+  }
+
+  .auth__illustration-coin {
+    display: none;
+  }
+
+  .auth__corps {
+    flex: none;
+  }
+
+  .auth__pied {
+    position: static;
+    padding: 28px 0 0;
+  }
+}
+
+/* Cases du code SMS : un chiffre par case. */
+.cases-code {
+  position: relative;
+  display: flex;
+  gap: 8px;
+}
+
+.cases-code__case {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  height: 58px;
+  border-radius: var(--rayon-champ);
+  border: 1px solid var(--separateur);
+  background: var(--blanc);
+  font-family: var(--police-titre);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.cases-code__case--vide {
+  background: var(--surface-selection);
+}
+
+.cases-code__case--courante {
+  border: 2px solid var(--encre);
+}
+
+.cases-code__case--courante::after {
+  content: '';
+  width: 2px;
+  height: 26px;
+  background: var(--encre);
+  animation: clignoter 1s steps(1) infinite;
+}
+
+@keyframes clignoter {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Le vrai champ, invisible, couvre les cases. */
+.cases-code input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0.01;
+  border: 0;
+  font-size: 16px;
+  caret-color: transparent;
+}
+
+.code__icone {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-top: 22px;
+  border-radius: 26px;
+  background: var(--surface-alt);
+}
+
+/* Case des conditions générales. */
+.conditions {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--info);
+}
+
+.conditions .lien-conditions {
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}

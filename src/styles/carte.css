@@ -1,0 +1,99 @@
+/* =========================================================================
+   Cartes OpenStreetMap (src/commun/carte.jsx) et leurs repères.
+   ========================================================================= */
+.carte-osm {
+  width: 100%;
+  height: 100%;
+  background: var(--fond-carte);
+  font-family: var(--police-corps);
+  z-index: 0;
+}
+
+.carte-osm .leaflet-control-attribution {
+  font-size: 10px;
+}
+
+.repere-carte {
+  background: none;
+  border: 0;
+}
+
+.repere-rond {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid var(--blanc);
+  box-shadow: 0 2px 8px rgba(18, 18, 18, 0.2);
+}
+
+/* Épingle en goutte : un carré arrondi sur trois coins, tourné de 45°. */
+.repere-epingle {
+  position: absolute;
+  left: 3px;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 17px 17px 0 17px;
+  background: var(--encre);
+  transform: rotate(45deg);
+  box-shadow: 0 6px 14px rgba(18, 18, 18, 0.25);
+}
+
+.repere-epingle span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent-vif);
+}
+
+.repere-station {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid;
+  box-shadow: 0 2px 6px rgba(18, 18, 18, 0.2);
+}
+
+.repere-entrepot {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 14px;
+  background: var(--blanc);
+  color: var(--encre);
+  font-size: 12px;
+  box-shadow: 0 4px 10px rgba(18, 18, 18, 0.18);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.repere-entrepot--choisi {
+  background: var(--encre);
+  color: var(--blanc);
+  box-shadow: 0 4px 10px rgba(18, 18, 18, 0.25);
+}
+
+.repere-client {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(232, 106, 42, 0.18);
+}
+
+.repere-client span {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid var(--blanc);
+  background: var(--accent-vif);
+}

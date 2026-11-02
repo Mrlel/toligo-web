@@ -1,0 +1,416 @@
+/* =========================================================================
+   Location de box : entrepôts, objet, choix, confirmation, détail, codes.
+   ========================================================================= */
+
+/* --- Entrepôts --- */
+.recherche-entrepot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 8px 0 16px;
+  border-radius: 22px;
+  background: var(--surface);
+  color: var(--texte-secondaire);
+}
+
+.recherche-entrepot:focus-within {
+  background: var(--blanc);
+  box-shadow: inset 0 0 0 2px var(--encre);
+}
+
+.recherche-entrepot input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font-size: 15px;
+  color: var(--encre);
+  outline: none;
+}
+
+.carte-entrepots {
+  position: relative;
+  height: 240px;
+  border-radius: 26px;
+  overflow: hidden;
+}
+
+.carte-entrepots__localiser {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 500;
+}
+
+.entrepots__mise-en-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'recherche' 'carte' 'filtres' 'liste';
+  gap: 14px;
+}
+
+.entrepots__recherche {
+  grid-area: recherche;
+}
+
+.entrepots__carte {
+  grid-area: carte;
+}
+
+.entrepots__filtres {
+  grid-area: filtres;
+}
+
+.entrepots__liste {
+  grid-area: liste;
+}
+
+@media (min-width: 960px) {
+  .entrepots__mise-en-page {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas: 'recherche carte' 'filtres carte' 'liste carte';
+    align-items: start;
+    column-gap: 24px;
+  }
+
+  .entrepots__carte {
+    position: sticky;
+    top: 88px;
+  }
+
+  .carte-entrepots {
+    height: calc(100dvh - 140px);
+    min-height: 420px;
+  }
+}
+
+/* --- Objet à stocker --- */
+.puce-categorie {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--separateur);
+  border-radius: 16px;
+  background: var(--blanc);
+  font-size: 14px;
+  color: var(--info);
+  white-space: nowrap;
+}
+
+.puce-categorie:hover {
+  background: var(--surface-selection);
+}
+
+.puce-categorie--choisie,
+.puce-categorie--choisie:hover {
+  padding: 0 13px;
+  border: 2px solid var(--encre);
+  background: var(--surface-selection);
+  color: var(--encre);
+  font-weight: 600;
+}
+
+.estimation-photo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--rayon-option);
+  background: var(--surface-alt);
+  cursor: pointer;
+}
+
+.estimation-photo:hover {
+  background: #ebebed;
+}
+
+.estimation-photo__icone {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 16px;
+  background: var(--encre);
+  color: var(--blanc);
+}
+
+.dimensions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.case-dimension {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--separateur);
+  border-radius: 16px;
+}
+
+.case-dimension:focus-within {
+  border-color: var(--encre);
+  box-shadow: inset 0 0 0 1px var(--encre);
+}
+
+.case-dimension--facultative {
+  border-style: dashed;
+  border-color: var(--gris-rond);
+}
+
+.case-dimension--erreur {
+  border: 1.5px solid var(--erreur);
+}
+
+.case-dimension span {
+  font-size: 11.5px;
+  color: var(--texte-secondaire);
+}
+
+.case-dimension input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 16px;
+  font-weight: 600;
+  outline: none;
+}
+
+.periode__ligne {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 6px 14px;
+}
+
+.periode__ligne label {
+  flex: none;
+  width: 40px;
+  font-size: 13px;
+  color: var(--texte-secondaire);
+}
+
+.periode__ligne input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 600;
+  outline: none;
+}
+
+/* --- Choix de la box --- */
+.lettre-box {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: var(--surface);
+  font-family: var(--police-titre);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.option--choisie .lettre-box {
+  border: 1px solid var(--bordure);
+  background: var(--blanc);
+}
+
+/* --- Box réservée --- */
+.box-confirmee__coche {
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 104px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: var(--succes-clair);
+}
+
+.box-confirmee__coche span {
+  display: grid;
+  place-items: center;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: var(--succes);
+  color: var(--blanc);
+}
+
+.etape-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14.5px;
+}
+
+.etape-box__pastille {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.etape-box__pastille--fait {
+  background: var(--succes);
+  color: var(--blanc);
+}
+
+.etape-box__pastille--a-venir {
+  border: 2px solid var(--separateur);
+}
+
+.etape-box__pastille--en-cours {
+  border: 3px solid #f4c9ae;
+  border-top-color: var(--accent);
+  animation: tourner 0.9s linear infinite;
+}
+
+/* --- Carte noire du code d'accès --- */
+.carte-code {
+  padding: 18px;
+  border-radius: 28px;
+  background: var(--encre);
+  color: var(--blanc);
+}
+
+.carte-code--cliquable {
+  cursor: pointer;
+}
+
+.carte-code__gris {
+  color: var(--gris-sur-noir);
+}
+
+.chiffres-code {
+  display: flex;
+  gap: 6px;
+}
+
+.chiffres-code span {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  height: 52px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  font-family: var(--police-titre);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.bouton-sur-noir {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: var(--rayon-pilule);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.bouton-sur-noir--blanc {
+  border: 0;
+  background: var(--blanc);
+  color: var(--encre);
+}
+
+.bouton-sur-noir--contour {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: var(--blanc);
+  font-weight: 600;
+}
+
+.bouton-sur-noir:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.zone-code {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.raccourci-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--rayon-option);
+  background: var(--surface);
+  text-align: left;
+  border: 0;
+  width: 100%;
+}
+
+.raccourci-box:hover:not(:disabled) {
+  filter: brightness(0.97);
+}
+
+.raccourci-box:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.raccourci-box__icone {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--rayon-petit);
+  background: var(--encre);
+  color: var(--blanc);
+}
+
+/* --- Code temporaire --- */
+.choix-pour-qui {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 76px;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-champ);
+  background: var(--blanc);
+  font-size: 13px;
+  color: var(--info);
+}
+
+.choix-pour-qui--choisi {
+  border: 2px solid var(--encre);
+  background: var(--surface-selection);
+  color: var(--encre);
+  font-weight: 600;
+}
+
+.code-cree {
+  font-family: var(--police-titre);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  text-align: center;
+}

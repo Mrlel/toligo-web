@@ -1,0 +1,61 @@
+.attente-paiement {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.attente-paiement__titre {
+  margin-top: 6px;
+  font-size: 16px;
+}
+
+.attente-paiement__texte {
+  max-width: 420px;
+  margin-bottom: 8px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--texte-secondaire);
+}
+
+/* Page /paiement-check, ouverte par GeniusPay après le paiement. */
+.retour-paiement {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 64px 24px;
+  text-align: center;
+}
+
+.retour-paiement__icone {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--succes-clair);
+}
+
+.retour-paiement__icone span {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--succes);
+  color: var(--blanc);
+}
+
+.retour-paiement h1 {
+  font-size: 24px;
+}
+
+.retour-paiement p {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--texte-secondaire);
+}

@@ -1,0 +1,661 @@
+/* =========================================================================
+   Parcours « Nouvel envoi » et paiement d'une commande.
+   ========================================================================= */
+.envoi__question {
+  margin-top: 14px;
+  font-size: 19px;
+}
+
+.envoi__sous-titre {
+  margin-top: 2px;
+  font-size: 13.5px;
+  color: var(--texte-secondaire);
+}
+
+/* --- Étape 1 : le trajet (collecte puis livraisons) --- */
+.trajet {
+  position: relative;
+  margin-top: 14px;
+}
+
+/* Pointillé vertical qui relie les ronds. */
+.trajet__pointille {
+  position: absolute;
+  left: 34px;
+  top: 50px;
+  bottom: 50px;
+  border-left: 2px dashed var(--pointilles);
+}
+
+.arret {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 10px 10px;
+}
+
+.arret + .arret::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 68px;
+  right: 14px;
+  height: 1px;
+  background: var(--surface-alt);
+}
+
+/* Rond de 42 px détouré de blanc pour masquer le pointillé. */
+.arret__rond {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--blanc);
+}
+
+.arret__rond > span {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+}
+
+.arret__etiquette {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--texte-secondaire);
+}
+
+.arret__titre {
+  margin-top: 2px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.arret__ligne {
+  font-size: 13px;
+  color: var(--texte-secondaire);
+}
+
+.coche-verte {
+  flex: none;
+  color: var(--succes-texte);
+}
+
+/* --- Choix de la collecte --- */
+.faux-champ-recherche {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--rayon-champ);
+  background: var(--surface);
+  color: var(--texte-discret);
+  font-size: 15px;
+  text-align: left;
+}
+
+.faux-champ-recherche:hover {
+  background: #efeff1;
+}
+
+.faux-champ-recherche svg {
+  color: var(--texte-secondaire);
+}
+
+.ligne-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 52px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: var(--rayon-petit);
+  background: none;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.ligne-action:hover {
+  background: var(--surface-selection);
+}
+
+.apercu-carte {
+  position: relative;
+  height: 160px;
+  border-radius: var(--rayon-carte);
+  overflow: hidden;
+}
+
+.apercu-carte__etiquette,
+.apercu-carte__bouton {
+  position: absolute;
+  bottom: 12px;
+  z-index: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--rayon-pilule);
+  font-size: 12.5px;
+}
+
+.apercu-carte__etiquette {
+  left: 12px;
+  background: var(--blanc);
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgba(18, 18, 18, 0.08);
+}
+
+.apercu-carte__bouton {
+  right: 12px;
+  background: var(--encre);
+  color: var(--blanc);
+  font-weight: 600;
+}
+
+.pastille-defaut {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--rayon-pilule);
+  background: var(--succes-clair);
+  color: var(--succes-fonce);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* --- Destinataire --- */
+.recents {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.recent {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 70px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.recent__anneau {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+.recent--choisi {
+  font-weight: 700;
+}
+
+.recent--choisi .recent__anneau {
+  border-color: var(--encre);
+}
+
+.separateur-texte {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--texte-discret);
+}
+
+.separateur-texte::before,
+.separateur-texte::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--bordure);
+}
+
+.bloc-adresse {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 76px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: var(--rayon-champ);
+  background: var(--surface);
+  text-align: left;
+}
+
+.bloc-adresse:hover {
+  background: #efeff1;
+}
+
+.bloc-adresse--erreur {
+  box-shadow: inset 0 0 0 1px var(--erreur);
+}
+
+.bandeau-destinataire {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px 8px 8px;
+  border-radius: var(--rayon-pilule);
+}
+
+/* --- Étape 2 : colis --- */
+.onglets-destinataires {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--rayon-pilule);
+  background: var(--surface);
+}
+
+.onglets-destinataires button {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--rayon-pilule);
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texte-secondaire);
+}
+
+.onglets-destinataires button[aria-selected='true'] {
+  background: var(--blanc);
+  color: var(--encre);
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(18, 18, 18, 0.08);
+}
+
+.coche-complet {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--succes-clair);
+  color: var(--succes-fonce);
+}
+
+.vignette-format {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.option--choisie .vignette-format {
+  background: var(--blanc);
+}
+
+.saisie-colis + .saisie-colis {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid var(--surface-alt);
+}
+
+.cases-formats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.case-format {
+  position: relative;
+}
+
+.case-format .option {
+  flex-direction: column;
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.case-format .option--choisie {
+  padding: 11px 7px;
+}
+
+.case-format__coche {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--encre);
+  color: var(--blanc);
+  pointer-events: none;
+}
+
+.puce-destinataire {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px 0 6px;
+  border: 0;
+  border-radius: var(--rayon-pilule);
+  background: var(--surface);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.puce-destinataire--choisie {
+  background: var(--encre);
+  color: var(--blanc);
+}
+
+.puce-destinataire__initiales {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--blanc);
+  color: var(--encre);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+/* --- Récapitulatif --- */
+.arret-recap {
+  display: flex;
+  gap: 12px;
+}
+
+.arret-recap__repere {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 12px;
+  padding-top: 4px;
+}
+
+.arret-recap__repere::after {
+  content: '';
+  flex: 1;
+  margin-top: 2px;
+  border-left: 2px dashed var(--pointilles);
+}
+
+.arret-recap--dernier .arret-recap__repere::after {
+  display: none;
+}
+
+.repere-collecte {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--encre);
+}
+
+.repere-livraison {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--accent);
+}
+
+.arret-recap__contenu {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 14px;
+}
+
+.total {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.total h3 {
+  flex: 1;
+  font-size: 16px;
+}
+
+.total strong {
+  font-family: var(--police-titre);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* --- Paiement --- */
+.carte-montant {
+  padding: 20px;
+  border-radius: 28px;
+  background: var(--encre);
+  color: var(--blanc);
+}
+
+.carte-montant__libelle {
+  font-size: 13px;
+  color: var(--gris-sur-noir);
+}
+
+.carte-montant__valeur {
+  margin-top: 4px;
+  font-family: var(--police-titre);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+.carte-montant__puces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.carte-montant__puces span {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: var(--rayon-pilule);
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.operateurs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (min-width: 760px) {
+  .operateurs {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.operateur {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--rayon-option);
+  border: 1px solid var(--bordure-legere);
+  background: var(--blanc);
+  box-shadow: var(--ombre-carte);
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.operateur__sigle {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--surface-alt);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* --- Commande confirmée --- */
+.confirmee {
+  padding-top: 30px;
+  text-align: center;
+}
+
+.illustration-confirmee {
+  position: relative;
+  width: 168px;
+  height: 156px;
+  margin: 0 auto;
+}
+
+.illustration-confirmee__disque {
+  position: absolute;
+  left: 10px;
+  top: 12px;
+  width: 148px;
+  height: 148px;
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.illustration-confirmee img {
+  position: absolute;
+  left: 30px;
+  top: 0;
+  width: 112px;
+}
+
+.illustration-confirmee__coche {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 4px solid var(--blanc);
+  background: var(--succes);
+  color: var(--blanc);
+}
+
+.code-suivi {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--rayon-pilule);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.code-suivi:hover {
+  background: #ebebed;
+}
+
+/* Photo d'un colis dans le récapitulatif : vignette cliquable. */
+.photo-colis {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 1.5px dashed var(--pointilles);
+  border-radius: 16px;
+  color: var(--texte-secondaire);
+  cursor: pointer;
+}
+
+.photo-colis:hover {
+  background: var(--surface-selection);
+}
+
+.photo-colis:focus-within {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}
+
+.photo-colis--faite {
+  border: 0;
+  background: var(--surface);
+}
+
+.photo-colis img,
+.photo-colis .image-protegee {
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+.photo-colis__coche {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--blanc);
+  border-radius: 50%;
+  background: var(--succes);
+  color: var(--blanc);
+}
+
+.photo-colis__etat {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-fonce);
+}
+
+.photo-colis__etat--faite {
+  color: var(--succes);
+}

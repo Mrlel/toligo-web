@@ -1,0 +1,371 @@
+/* =========================================================================
+   Mise en page : barre latérale (ordinateur), onglets du bas (téléphone),
+   et gabarit des écrans (en-tête, contenu, pied d'action).
+
+   Point de bascule : 960 px. En dessous, l'application se présente comme
+   l'application mobile ; au-dessus, la navigation passe à gauche.
+   ========================================================================= */
+
+.coquille {
+  min-height: 100dvh;
+}
+
+.coquille__contenu {
+  min-width: 0;
+}
+
+/* Place réservée sous le contenu pour les onglets du bas. */
+.coquille--avec-onglets .coquille__contenu {
+  padding-bottom: calc(72px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 960px) {
+  .coquille {
+    display: grid;
+    grid-template-columns: var(--largeur-barre-laterale) minmax(0, 1fr);
+  }
+
+  .coquille--avec-onglets .coquille__contenu {
+    padding-bottom: 0;
+  }
+}
+
+/* ------------------------------------------------------------------------
+   Barre latérale (ordinateur uniquement)
+   ------------------------------------------------------------------------ */
+.barre-laterale {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .barre-laterale {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    height: 100dvh;
+    padding: 22px 16px 18px;
+    border-right: 1px solid var(--bordure-legere);
+    background: var(--blanc);
+    overflow-y: auto;
+  }
+}
+
+.barre-laterale__logo {
+  display: block;
+  padding: 4px 12px 18px;
+  font-family: var(--police-titre);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  text-decoration: none;
+}
+
+.barre-laterale__logo span {
+  color: var(--accent);
+}
+
+.barre-laterale__nouvel-envoi {
+  margin-bottom: 14px;
+  height: 50px;
+  font-size: 15px;
+}
+
+.barre-laterale__lien {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  padding: 0 14px;
+  border-radius: 16px;
+  color: var(--texte-secondaire);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.barre-laterale__lien:hover {
+  background: var(--surface-selection);
+  color: var(--encre);
+}
+
+.barre-laterale__lien.active {
+  background: var(--surface);
+  color: var(--encre);
+  font-weight: 700;
+}
+
+.barre-laterale__compteur {
+  margin-left: auto;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: var(--rayon-pilule);
+  background: var(--accent);
+  color: var(--blanc);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 22px;
+  text-align: center;
+}
+
+.barre-laterale__bas {
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.barre-laterale__profil {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 18px;
+  text-decoration: none;
+}
+
+.barre-laterale__profil:hover {
+  background: var(--surface-selection);
+}
+
+/* ------------------------------------------------------------------------
+   Onglets du bas (téléphone)
+   ------------------------------------------------------------------------ */
+.onglets-bas {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  height: calc(72px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: 1px solid var(--bordure-legere);
+  border-radius: 28px 28px 0 0;
+  background: var(--blanc);
+  box-shadow: 0 -6px 24px rgba(18, 18, 18, 0.05);
+}
+
+@media (min-width: 960px) {
+  .onglets-bas {
+    display: none;
+  }
+}
+
+.onglets-bas__onglet {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--texte-discret);
+  font-size: 11.5px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.onglets-bas__onglet.active {
+  color: var(--encre);
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------------------
+   Gabarit d'un écran
+   ------------------------------------------------------------------------ */
+.page {
+  --largeur-page: 640px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--fond-page, var(--fond));
+}
+
+.coquille--avec-onglets .page {
+  min-height: calc(100dvh - 72px);
+}
+
+@media (min-width: 960px) {
+  .coquille--avec-onglets .page {
+    min-height: 100dvh;
+  }
+}
+
+.page--moyenne {
+  --largeur-page: 880px;
+}
+
+.page--large {
+  --largeur-page: 1120px;
+}
+
+.page__limite {
+  width: 100%;
+  max-width: calc(var(--largeur-page) + 2 * var(--marge-ecran));
+  margin: 0 auto;
+  padding-left: var(--marge-ecran);
+  padding-right: var(--marge-ecran);
+}
+
+.page__entete {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--fond-page, var(--fond));
+}
+
+.page__corps {
+  flex: 1;
+  padding-top: 4px;
+  padding-bottom: 24px;
+}
+
+.page__pied {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+}
+
+.page__pied .page__limite {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+@media (min-width: 960px) {
+  .page__corps {
+    padding-top: 8px;
+    padding-bottom: 32px;
+  }
+
+  .page--sans-entete .page__corps {
+    padding-top: 32px;
+  }
+}
+
+/* En-tête : retour à gauche, titre centré, actions à droite. */
+.entete {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 64px;
+  align-items: center;
+  min-height: 72px;
+}
+
+.entete--actions-larges {
+  grid-template-columns: 96px minmax(0, 1fr) 96px;
+}
+
+.entete__titre {
+  text-align: center;
+  min-width: 0;
+}
+
+.entete__titre h1 {
+  font-size: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entete__titre p {
+  margin-top: 1px;
+  font-size: 12px;
+  color: var(--texte-secondaire);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entete__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Grand titre des écrans principaux (« Mes envois »). */
+.titre-ecran {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+}
+
+.titre-ecran h1 {
+  flex: 1;
+  font-size: 26px;
+  letter-spacing: -0.3px;
+}
+
+@media (min-width: 960px) {
+  .titre-ecran {
+    padding: 0 0 20px;
+  }
+
+  .titre-ecran h1 {
+    font-size: 30px;
+  }
+}
+
+/* Pied d'action fixé en bas de l'écran. */
+.pied {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px var(--marge-ecran) calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--surface-alt);
+  background: var(--fond);
+}
+
+.pied--arrondi {
+  border-top: 0;
+  border-radius: 28px 28px 0 0;
+  box-shadow: 0 -8px 28px rgba(18, 18, 18, 0.07);
+}
+
+.pied__entete {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.pied__note {
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--texte-secondaire);
+}
+
+/* Grille de cartes : une colonne sur téléphone, deux ou plus sur ordinateur.
+   minmax(0, 1fr) : une colonne ne s'élargit jamais au-delà de l'écran. */
+.grille {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 760px) {
+  .grille--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .grille--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+.espace-s {
+  height: 8px;
+}
+
+.espace-m {
+  height: 14px;
+}
+
+.espace-l {
+  height: 20px;
+}
+
+.espace-xl {
+  height: 28px;
+}

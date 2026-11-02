@@ -1,0 +1,787 @@
+/* =========================================================================
+   Page publique (VitrinePage) : présentation de Tôligo aux visiteurs.
+
+   Téléphone d'abord ; à partir de 960 px, colonnes côte à côte.
+   ========================================================================= */
+.vitrine {
+  --hauteur-entete: 68px;
+  min-height: 100dvh;
+  background: var(--fond);
+  overflow-x: clip; /* les décors peuvent déborder sans créer de défilement */
+}
+
+@media (min-width: 960px) {
+  .vitrine {
+    --marge-ecran: 32px;
+    --hauteur-entete: 76px;
+  }
+}
+
+.vitrine__limite {
+  width: 100%;
+  max-width: calc(1180px + 2 * var(--marge-ecran));
+  margin: 0 auto;
+  padding-left: var(--marge-ecran);
+  padding-right: var(--marge-ecran);
+}
+
+/* ------------------------------------------------------------------------
+   En-tête translucide, collé en haut
+   ------------------------------------------------------------------------ */
+.vitrine__entete {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  border-bottom: 1px solid var(--bordure-legere);
+  background: var(--voile-blanc);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  backdrop-filter: saturate(1.4) blur(14px);
+}
+
+.vitrine__barre {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: var(--hauteur-entete);
+}
+
+.vitrine__logo {
+  font-family: var(--police-titre);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  text-decoration: none;
+}
+
+.vitrine__logo span {
+  color: var(--accent);
+}
+
+.vitrine__nav {
+  display: none;
+}
+
+.vitrine__nav a {
+  padding: 10px 14px;
+  border-radius: var(--rayon-pilule);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--texte-secondaire);
+  text-decoration: none;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.vitrine__nav a:hover {
+  background: var(--surface);
+  color: var(--encre);
+}
+
+.vitrine__acces {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.vitrine__acces .bouton {
+  width: auto;
+  padding: 0 18px;
+}
+
+/* Sur petit téléphone, « Créer un compte » est déjà en haut de page. */
+.vitrine__acces .bouton--principal {
+  display: none;
+}
+
+@media (min-width: 600px) {
+  .vitrine__acces .bouton--principal {
+    display: flex;
+  }
+}
+
+@media (min-width: 960px) {
+  .vitrine__nav {
+    display: flex;
+    gap: 2px;
+    margin: 0 auto;
+  }
+
+  .vitrine__acces {
+    margin-left: 0;
+  }
+}
+
+/* ------------------------------------------------------------------------
+   Haut de page
+   ------------------------------------------------------------------------ */
+.vitrine__heros {
+  display: grid;
+  gap: 36px;
+  padding-top: 28px;
+  padding-bottom: 40px;
+}
+
+@media (min-width: 960px) {
+  .vitrine__heros {
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 72px;
+    padding-top: 56px;
+    padding-bottom: 32px;
+  }
+}
+
+.vitrine__pastille {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 14px 0 6px;
+  border-radius: var(--rayon-pilule);
+  background: var(--accent-clair);
+  color: var(--accent-fonce);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.vitrine__pastille-icone {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--blanc);
+  color: var(--accent);
+}
+
+.vitrine__titre {
+  margin-top: 18px;
+  font-size: clamp(32px, 8.4vw, 52px);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -1.2px;
+}
+
+.vitrine__chapeau {
+  max-width: 480px;
+  margin-top: 18px;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--texte-secondaire);
+}
+
+.vitrine__boutons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+@media (min-width: 600px) {
+  .vitrine__boutons {
+    flex-direction: row;
+  }
+
+  .vitrine__boutons .bouton {
+    width: auto;
+    padding: 0 28px;
+  }
+}
+
+.vitrine__atouts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texte-secondaire);
+}
+
+.vitrine__atouts li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vitrine__coche {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--succes-clair);
+  color: var(--succes);
+}
+
+.vitrine__heros-visuel {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: 500px;
+  justify-self: center;
+}
+
+/* Halo orange pâle derrière l'illustration. */
+.vitrine__heros-visuel::before {
+  content: '';
+  position: absolute;
+  inset: -14% -16% -10%;
+  z-index: -1;
+  background: radial-gradient(closest-side, var(--accent-clair), transparent);
+}
+
+.vitrine .scene {
+  box-shadow: 0 30px 60px -20px rgba(18, 18, 18, 0.18);
+}
+
+/* ------------------------------------------------------------------------
+   Sections
+   ------------------------------------------------------------------------ */
+.vitrine__section {
+  padding: 48px 0;
+  scroll-margin-top: var(--hauteur-entete);
+}
+
+.vitrine__section--serree {
+  padding: 16px 0;
+}
+
+@media (min-width: 960px) {
+  .vitrine__section {
+    padding: 88px 0;
+  }
+
+  .vitrine__section--serree {
+    padding: 24px 0;
+  }
+}
+
+.vitrine__deux-colonnes {
+  display: grid;
+  gap: 32px;
+  align-items: center;
+}
+
+@media (min-width: 960px) {
+  .vitrine__deux-colonnes {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 80px;
+  }
+
+  /* Illustration à droite pour la section « Box ». */
+  .vitrine__deux-colonnes--inverse > .vitrine__visuel {
+    order: 2;
+  }
+}
+
+.vitrine__visuel {
+  width: 100%;
+  max-width: 480px;
+  justify-self: center;
+}
+
+.vitrine__etiquette {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.vitrine__sous-titre {
+  margin-top: 10px;
+  font-size: clamp(27px, 6.4vw, 40px);
+  line-height: 1.12;
+  letter-spacing: -0.8px;
+}
+
+.vitrine__texte {
+  margin-top: 14px;
+  font-size: 16.5px;
+  line-height: 1.55;
+  color: var(--texte-secondaire);
+}
+
+.vitrine__action {
+  margin-top: 28px;
+}
+
+@media (min-width: 600px) {
+  .vitrine__action .bouton {
+    width: auto;
+    padding: 0 28px;
+  }
+}
+
+/* Étapes numérotées, reliées par un trait pointillé. */
+.vitrine__etapes {
+  display: grid;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: etape;
+}
+
+.vitrine__etape {
+  position: relative;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 14px;
+  padding-bottom: 20px;
+}
+
+.vitrine__etape::before {
+  counter-increment: etape;
+  content: counter(etape);
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--encre);
+  color: var(--blanc);
+  font-family: var(--police-titre);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.vitrine__etape:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 18px;
+  top: 44px;
+  bottom: 4px;
+  border-left: 2px dashed var(--pointilles);
+}
+
+.vitrine__etape:last-child {
+  padding-bottom: 0;
+}
+
+.vitrine__etape strong {
+  display: block;
+  padding-top: 1px;
+  font-family: var(--police-titre);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.vitrine__etape span {
+  display: block;
+  margin-top: 3px;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--texte-secondaire);
+}
+
+/* ------------------------------------------------------------------------
+   Bandeau noir : le ciel et la route
+   ------------------------------------------------------------------------ */
+.vitrine__nuit {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 44px 22px 36px;
+  border-radius: 28px;
+  background: var(--encre);
+  color: var(--blanc);
+}
+
+/* Lueur orange en haut à droite. */
+.vitrine__nuit::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(circle at 88% 0%, color-mix(in srgb, var(--accent) 38%, transparent), transparent 42%);
+}
+
+@media (min-width: 960px) {
+  .vitrine__nuit {
+    padding: 72px 64px 56px;
+    border-radius: 36px;
+  }
+}
+
+.vitrine__nuit-entete {
+  max-width: 660px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.vitrine__nuit .vitrine__etiquette {
+  color: var(--accent-vif);
+}
+
+.vitrine__nuit .vitrine__texte {
+  color: var(--gris-sur-noir);
+}
+
+/* Trajet d'un colis : vertical sur téléphone, horizontal sur ordinateur. */
+.trajet {
+  display: grid;
+  max-width: 420px;
+  margin: 40px auto 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trajet__arret {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  column-gap: 14px;
+  align-items: center;
+}
+
+.trajet__rond {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--nuit-bordure);
+  border-radius: 50%;
+  background: var(--nuit-carte);
+}
+
+.trajet__arret strong {
+  align-self: end;
+  font-family: var(--police-titre);
+  font-size: 15.5px;
+  font-weight: 600;
+}
+
+.trajet__detail {
+  align-self: start;
+  font-size: 13.5px;
+  color: var(--gris-sur-noir);
+}
+
+.trajet__liaison {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  margin-left: 25px;
+  padding-left: 27px;
+}
+
+.trajet__liaison::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--nuit-bordure);
+}
+
+/* Le tronçon en drone : pointillés orange qui avancent. */
+.trajet__liaison--ciel::before {
+  background: repeating-linear-gradient(to bottom, var(--accent-vif) 0 6px, transparent 6px 12px);
+  background-size: 2px 12px;
+  animation: trajet-ciel-vertical 0.9s linear infinite;
+}
+
+.trajet__mode {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 11px;
+  border: 1px solid var(--nuit-bordure);
+  border-radius: var(--rayon-pilule);
+  background: var(--encre); /* opaque : le trait du trajet passe derrière */
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--gris-sur-noir);
+}
+
+.trajet__liaison--ciel .trajet__mode {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--blanc);
+}
+
+@keyframes trajet-ciel-vertical {
+  to {
+    background-position: 0 12px;
+  }
+}
+
+@keyframes trajet-ciel {
+  to {
+    background-position: 12px 0;
+  }
+}
+
+@media (min-width: 960px) {
+  .trajet {
+    grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto;
+    align-items: start;
+    max-width: none;
+    margin-top: 56px;
+  }
+
+  .trajet__arret {
+    grid-template-columns: none;
+    justify-items: center;
+    row-gap: 3px;
+    width: 156px;
+    text-align: center;
+  }
+
+  .trajet__rond {
+    grid-row: auto;
+    width: 60px;
+    height: 60px;
+    margin-bottom: 10px;
+  }
+
+  /* Le trait relie les deux ronds voisins (48 px de marge de chaque côté). */
+  .trajet__liaison {
+    justify-content: center;
+    height: 60px;
+    margin: 0 -48px;
+    padding: 0;
+  }
+
+  .trajet__liaison::before {
+    left: 6px;
+    right: 6px;
+    top: 29px;
+    bottom: auto;
+    width: auto;
+    height: 2px;
+  }
+
+  .trajet__liaison--ciel::before {
+    background: repeating-linear-gradient(to right, var(--accent-vif) 0 6px, transparent 6px 12px);
+    background-size: 12px 2px;
+    animation-name: trajet-ciel;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trajet__liaison--ciel::before {
+    animation: none;
+  }
+}
+
+.vitrine__duo {
+  display: grid;
+  gap: 12px;
+  margin-top: 40px;
+}
+
+@media (min-width: 760px) {
+  .vitrine__duo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+.carte-nuit {
+  padding: 22px;
+  border: 1px solid var(--nuit-bordure);
+  border-radius: var(--rayon-carte);
+  background: var(--nuit-carte);
+}
+
+.carte-nuit__icone {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--blanc);
+  color: var(--encre);
+}
+
+.carte-nuit--ciel .carte-nuit__icone {
+  background: var(--accent);
+  color: var(--blanc);
+}
+
+.carte-nuit h3 {
+  margin-top: 14px;
+  font-size: 18px;
+}
+
+.carte-nuit p {
+  margin-top: 6px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--gris-sur-noir);
+}
+
+.vitrine__note {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.vitrine__note svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--accent-vif);
+}
+
+/* ------------------------------------------------------------------------
+   Box : trois atouts
+   ------------------------------------------------------------------------ */
+.vitrine__atouts-box {
+  display: grid;
+  gap: 10px;
+  margin: 26px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 600px) {
+  .vitrine__atouts-box {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.atout {
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--surface);
+}
+
+.atout__icone {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--blanc);
+  box-shadow: var(--ombre-carte);
+}
+
+.atout strong {
+  display: block;
+  margin-top: 12px;
+  font-family: var(--police-titre);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.atout > span:last-child {
+  display: block;
+  margin-top: 4px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--texte-secondaire);
+}
+
+/* ------------------------------------------------------------------------
+   Dernier appel
+   ------------------------------------------------------------------------ */
+.vitrine__appel {
+  display: grid;
+  gap: 8px;
+  padding: 32px 22px;
+  border-radius: 28px;
+  background: var(--accent-clair);
+}
+
+.vitrine__appel-image {
+  width: 112px;
+  height: auto;
+  user-select: none;
+}
+
+.vitrine__appel .vitrine__texte {
+  color: var(--accent-fonce);
+}
+
+.vitrine__boutons--appel {
+  margin-top: 16px;
+}
+
+@media (min-width: 960px) {
+  .vitrine__appel {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 40px;
+    padding: 48px 56px;
+    border-radius: 36px;
+  }
+
+  .vitrine__appel-image {
+    width: 150px;
+  }
+
+  .vitrine__boutons--appel {
+    flex-direction: column;
+    margin-top: 0;
+  }
+}
+
+/* ------------------------------------------------------------------------
+   Pied de page
+   ------------------------------------------------------------------------ */
+.vitrine__pied {
+  margin-top: 40px;
+  padding: 40px 0 calc(28px + env(safe-area-inset-bottom));
+  background: var(--surface);
+}
+
+.vitrine__pied-contenu {
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 760px) {
+  .vitrine__pied-contenu {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}
+
+.vitrine__pied-contenu p {
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--texte-secondaire);
+}
+
+.vitrine__pied-liens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: -12px;
+}
+
+.vitrine__pied-liens a {
+  padding: 8px 12px;
+  border-radius: var(--rayon-pilule);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.vitrine__pied-liens a:hover {
+  background: var(--blanc);
+}
+
+.vitrine__copyright {
+  grid-column: 1 / -1;
+  padding-top: 18px;
+  border-top: 1px solid var(--separateur);
+  font-size: 13px;
+  color: var(--texte-discret);
+}

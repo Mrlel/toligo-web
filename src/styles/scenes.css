@@ -1,0 +1,147 @@
+/* =========================================================================
+   Scènes illustrées (commun/Scenes.jsx) : page publique, connexion et
+   inscription. Reprises des maquettes A-Bienvenue, A-Onboard-Colis et
+   A-Onboard-Box.
+   ========================================================================= */
+.scene {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 350 / 356;
+  border-radius: 36px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.scene__decor {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.scene__image {
+  position: absolute;
+  height: auto;
+  user-select: none;
+}
+
+.scene__puce {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 14px 0 6px;
+  border-radius: var(--rayon-pilule);
+  background: var(--blanc);
+  box-shadow: 0 8px 20px rgba(18, 18, 18, 0.08);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.scene__puce--point {
+  padding-left: 14px;
+}
+
+.scene__puce--sombre {
+  background: var(--encre);
+  color: var(--blanc);
+  box-shadow: none;
+}
+
+.scene__puce-icone {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-clair);
+  color: var(--accent);
+}
+
+.scene__puce--sombre .scene__puce-icone {
+  background: var(--blanc);
+  color: var(--encre);
+}
+
+.scene__puce-point {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.scene__formats {
+  position: absolute;
+  left: 4.6%;
+  right: 4.6%;
+  bottom: 6.2%;
+  display: flex;
+  gap: 8px;
+}
+
+.scene__format {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  border-radius: var(--rayon-pilule);
+  background: var(--blanc);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.scene__format small {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--texte-secondaire);
+}
+
+.scene__format--sombre {
+  background: var(--encre);
+  color: var(--blanc);
+}
+
+.scene__format--sombre small {
+  color: var(--gris-rond);
+}
+
+.scene__pin {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 10px 10px;
+  border-radius: 20px;
+  background: var(--blanc);
+  box-shadow: 0 10px 24px rgba(18, 18, 18, 0.08);
+}
+
+.scene__pin-icone {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--encre);
+  color: var(--blanc);
+}
+
+.scene__pin small {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--texte-secondaire);
+}
+
+.scene__pin strong {
+  display: block;
+  font-family: var(--police-titre);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
