@@ -12,14 +12,16 @@
   color: var(--texte-secondaire);
 }
 
-/* --- Étape 1 : le trajet (collecte puis livraisons) --- */
-.trajet {
+/* --- Étape 1 : le trajet (collecte puis livraisons) ---
+   Nommé « trajet-envoi » : la vitrine a déjà un « .trajet » (grille
+   horizontale dès 960 px) qui alignait ici les adresses en ligne. */
+.trajet-envoi {
   position: relative;
   margin-top: 14px;
 }
 
 /* Pointillé vertical qui relie les ronds. */
-.trajet__pointille {
+.trajet-envoi__pointille {
   position: absolute;
   left: 34px;
   top: 50px;
@@ -321,6 +323,52 @@
 
 .option--choisie .vignette-format {
   background: var(--blanc);
+}
+
+/* Choix présenté en cartes côte à côte (formats de colis, modes de réception).
+   Les cartes passent à la ligne quand la place manque : 2 par ligne sur un
+   téléphone, davantage sur un écran large. */
+.choix-grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+/* La cascade enveloppe chaque carte : toutes ont la même hauteur. */
+.choix-grille > .cascade__element {
+  display: flex;
+}
+
+.choix-grille .option {
+  position: relative;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 14px 12px;
+}
+
+.choix-grille .option--choisie,
+.choix-grille .option--choisie:hover:not(:disabled) {
+  padding: 13px 11px;
+}
+
+.choix-grille .option .rond-selection {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.choix-carte {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  height: 100%;
+}
+
+.choix-carte__prix {
+  margin-top: auto;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .saisie-colis + .saisie-colis {

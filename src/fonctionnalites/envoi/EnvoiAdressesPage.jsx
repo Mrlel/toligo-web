@@ -81,8 +81,8 @@ export default function EnvoiAdressesPage() {
       <p className="envoi__sous-titre">Vérifiez votre adresse, ajoutez le destinataire</p>
 
       {/* Le trajet : l'expéditeur, puis le destinataire, reliés par un pointillé. */}
-      <Carte sansMarge className="trajet">
-        {destinataires.length > 0 && <span className="trajet__pointille" aria-hidden="true" />}
+      <Carte sansMarge className="trajet-envoi">
+        {destinataires.length > 0 && <span className="trajet-envoi__pointille" aria-hidden="true" />}
         <Arret
           rond={
             <span style={{ background: 'var(--encre)', color: 'var(--blanc)' }}>

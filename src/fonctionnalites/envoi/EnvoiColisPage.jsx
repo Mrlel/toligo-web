@@ -120,17 +120,16 @@ export default function EnvoiColisPage() {
                   {destinataire.colis.length > 1 && <PetitBouton onClick={() => retirerColis(indexCourant, c)}>Retirer</PetitBouton>}
                 </div>
 
-                <Cascade className="pile" style={{ gap: 10, marginTop: 14 }}>
+                <Cascade className="choix-grille" style={{ marginTop: 14 }}>
                   {listeFormats.map((format) => (
                     <Option
                       key={format.id}
                       choisie={colis.format?.id === format.id}
                       onClick={() => modifierColis(indexCourant, c, { format })}
-                      style={{ padding: '10px 14px 10px 10px' }}
                     >
-                      <div className="rangee" style={{ gap: 14 }}>
+                      <div className="choix-carte">
                         <VignetteFormat format={format} />
-                        <div className="extensible">
+                        <div>
                           <p className="titre" style={{ fontSize: 15.5 }}>
                             {format.libelle}
                           </p>
@@ -139,7 +138,7 @@ export default function EnvoiColisPage() {
                             {poidsLisible(format.poidsMaxKg)}
                           </p>
                         </div>
-                        <span style={{ fontSize: 15, fontWeight: 700 }}>{prix(format.prix)}</span>
+                        <span className="choix-carte__prix">{prix(format.prix)}</span>
                       </div>
                     </Option>
                   ))}

@@ -20,8 +20,8 @@ const ICONES = {
  * colis, pour toute la commande.
  *
  * En continuant, le brouillon est créé (ou remplacé) sur le serveur, qui
- * choisit la station d'arrivée et calcule le supplément du mode : barème de
- * distance à domicile, tarif de location en box. S'il refuse le mode (adresse
+ * choisit la station d'arrivée et calcule le supplément du mode : distance ×
+ * prix au km à domicile, tarif de location en box. S'il refuse le mode (adresse
  * trop loin, tarif pas encore fixé), son message s'affiche ici.
  */
 export default function EnvoiReceptionPage() {
@@ -75,17 +75,17 @@ export default function EnvoiReceptionPage() {
       </h2>
       <p className="envoi__sous-titre">Tôligo choisit les stations et le trajet, camion ou drone</p>
 
-      <Cascade className="pile" style={{ gap: 10, marginTop: 14 }}>
+      <Cascade className="choix-grille" style={{ marginTop: 14 }}>
         {MODES_RECEPTION.map((mode) => {
           const Icone = ICONES[mode.code];
           const choisi = brouillon.modeReception === mode.code;
           return (
             <Option key={mode.code} choisie={choisi} onClick={() => choisirModeReception(mode.code)}>
-              <div className="rangee" style={{ gap: 12 }}>
+              <div className="choix-carte">
                 <span className={`rond-icone${choisi ? ' rond-icone--noir' : ''}`}>
                   <Icone size={19} />
                 </span>
-                <div className="extensible">
+                <div>
                   <p className="demi-gras" style={{ fontSize: 15 }}>
                     {mode.libelle}
                   </p>
