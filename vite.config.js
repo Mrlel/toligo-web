@@ -1,24 +1,33 @@
+import http from 'node:http';
+import https from 'node:https';
+import net from 'node:net';
+import dns from 'node:dns';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Adresse de l'API Laravel sur ce PC (php artisan serve), quand API_CIBLE
-// n'est pas renseignée.
+// Évite d'essayer plusieurs adresses (IPv6 puis IPv4) à chaque connexion.
+dns.setDefaultResultOrder('ipv4first');
+net.setDefaultAutoSelectFamily(false);
+
 const API_LOCALE = 'http://127.0.0.1:8000';
 
-// Port 5173 : c'est l'adresse que le backend autorise par défaut (CORS,
-// CORS_ALLOWED_ORIGINS dans toligo/.env).
-//
-// host: true rend l'application joignable depuis un téléphone sur le même
-// Wi-Fi (http://<ip-du-pc>:5173). Attention : hors de localhost, le
-// navigateur refuse la géolocalisation et le service worker sans HTTPS.
 export default defineConfig(({ mode }) => {
-  // Proxy : en développement, l'application appelle sa propre adresse
-  // (/api/...) et Vite transmet à l'API désignée par API_CIBLE (fichier
-  // .env.development : la prod). Ainsi :
-  // - pas de blocage CORS, même ouverte par l'adresse réseau (192.168.x.x) ;
-  // - un téléphone sur le même Wi-Fi joint l'API à travers le PC.
   const cible = loadEnv(mode, process.cwd(), '').API_CIBLE || API_LOCALE;
-  const proxy = { '/api': { target: cible, changeOrigin: true } };
+
+  // Réutilise les connexions au lieu d'en ouvrir une par requête.
+  const options = { keepAlive: true, maxSockets: 20, maxFreeSockets: 10 };
+  const agent = cible.startsWith('https')
+    ? new https.Agent(options)
+    : new http.Agent(options);
+
+  const proxy = {
+    '/api': {
+      target: cible,
+      changeOrigin: true,
+      secure: true,
+      agent,
+    },
+  };
 
   return {
     plugins: [react()],

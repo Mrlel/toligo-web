@@ -98,8 +98,7 @@ function ChoixBox({ recherche, boxes }) {
       <div className="encadre-info" style={{ alignItems: 'center', color: 'var(--encre)', padding: '6px 4px 6px 12px' }}>
         <Luggage size={18} />
         <span className="extensible" style={{ fontSize: 13.5 }}>
-          <strong>{recherche.libelleObjet}</strong> · {Math.round(recherche.longueur)} × {Math.round(recherche.largeur)} ×{' '}
-          {Math.round(recherche.hauteur)} cm · {libelleDuree(heures)}
+          <strong>{recherche.libelleObjet}</strong> · {recherche.formatCaisse.libelle} · {libelleDuree(heures)}
         </span>
         {!urlPaiement && (
           <button type="button" className="lien" onClick={retour}>

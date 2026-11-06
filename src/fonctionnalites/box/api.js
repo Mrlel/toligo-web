@@ -110,29 +110,29 @@ export async function typesObjets() {
   return lireListe(await api.get('/types-objets')).map((json) => ({ id: json.id, libelle: json.libelle ?? '' }));
 }
 
-/** Estimation des dimensions d'un objet à partir de 1 à 3 photos (fichiers). */
-export async function estimerDimensions(photos) {
-  const formulaire = new FormData();
-  photos.forEach((photo) => formulaire.append('images[]', photo));
-  const json = lireObjet(await api.postFormulaire('/client/objets/analyser-image', formulaire));
-  return {
-    longueur: lireNombre(json.longueur) ?? 0,
-    largeur: lireNombre(json.largeur) ?? 0,
-    hauteur: lireNombre(json.hauteur) ?? 0,
-  };
+/** Gabarits de rangement proposés à la location (choix du client). */
+export async function formatsCaisseDisponibles() {
+  return lireListe(await api.get('/client/formats-caisse')).map((json) => ({
+    id: json.id,
+    code: json.code ?? '',
+    libelle: json.libelle ?? '',
+    description: json.description ?? null,
+    dimensionsMax: json.dimensions_max_cm
+      ? `${Math.round(json.dimensions_max_cm.longueur)} × ${Math.round(json.dimensions_max_cm.largeur)} × ${Math.round(json.dimensions_max_cm.hauteur)} cm`
+      : null,
+  }));
 }
 
 /**
  * Recherche des box adaptées. `recherche` : { entrepot, typeObjet,
- * libelleObjet, longueur, largeur, hauteur, poids, debut, fin } (dates en ISO).
+ * libelleObjet, formatCaisse, debut, fin } (dates en ISO).
  */
 export async function rechercherBox(recherche) {
   const donnees = await api.post('/client/locations/search-caisses', {
     warehouseid: recherche.entrepot.id,
     categoryid: recherche.typeObjet.id,
     libelle_objet: recherche.libelleObjet,
-    dimensions: { longueur: recherche.longueur, largeur: recherche.largeur, hauteur: recherche.hauteur },
-    poids: recherche.poids,
+    format_caisse_id: recherche.formatCaisse.id,
     fromDateLocation: dateApi(new Date(recherche.debut)),
     toDateLocation: dateApi(new Date(recherche.fin)),
   });
