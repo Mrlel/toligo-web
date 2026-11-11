@@ -110,41 +110,53 @@ export async function typesObjets() {
   return lireListe(await api.get('/types-objets')).map((json) => ({ id: json.id, libelle: json.libelle ?? '' }));
 }
 
-/** Gabarits de rangement proposés à la location (choix du client). */
-export async function formatsCaisseDisponibles() {
-  return lireListe(await api.get('/client/formats-caisse')).map((json) => ({
-    id: json.id,
-    code: json.code ?? '',
-    libelle: json.libelle ?? '',
-    description: json.description ?? null,
-    dimensionsMax: json.dimensions_max_cm
-      ? `${Math.round(json.dimensions_max_cm.longueur)} × ${Math.round(json.dimensions_max_cm.largeur)} × ${Math.round(json.dimensions_max_cm.hauteur)} cm`
-      : null,
-  }));
+/** Estimation des dimensions d'un objet à partir de 1 à 3 photos (fichiers). */
+export async function estimerDimensions(photos) {
+  const formulaire = new FormData();
+  photos.forEach((photo) => formulaire.append('images[]', photo));
+  const json = lireObjet(await api.postFormulaire('/client/objets/analyser-image', formulaire));
+  return {
+    longueur: lireNombre(json.longueur) ?? 0,
+    largeur: lireNombre(json.largeur) ?? 0,
+    hauteur: lireNombre(json.hauteur) ?? 0,
+  };
+}
+
+/** Dimensions et poids de l'objet, au format attendu par l'API V1. */
+function objetDeclare(recherche) {
+  return {
+    dimensions: { longueur: recherche.longueur, largeur: recherche.largeur, hauteur: recherche.hauteur },
+    poids: recherche.poids,
+  };
 }
 
 /**
  * Recherche des box adaptées. `recherche` : { entrepot, typeObjet,
- * libelleObjet, formatCaisse, debut, fin } (dates en ISO).
+ * libelleObjet, longueur, largeur, hauteur, poids, debut, fin } (dates en ISO).
  */
 export async function rechercherBox(recherche) {
   const donnees = await api.post('/client/locations/search-caisses', {
     warehouseid: recherche.entrepot.id,
     categoryid: recherche.typeObjet.id,
     libelle_objet: recherche.libelleObjet,
-    format_caisse_id: recherche.formatCaisse.id,
+    ...objetDeclare(recherche),
     fromDateLocation: dateApi(new Date(recherche.debut)),
     toDateLocation: dateApi(new Date(recherche.fin)),
   });
   return lireListe(donnees).map(versBoxProposee);
 }
 
-/** Crée la location (en attente de paiement). Renvoie l'adresse de la page GeniusPay. */
+/**
+ * Crée la location (en attente de paiement). Renvoie l'adresse de la page
+ * GeniusPay. Les dimensions repartent avec la réservation : le serveur
+ * revérifie que la box choisie contient bien l'objet.
+ */
 export async function reserverBox(recherche, box) {
   const donnees = await api.post('/client/locations', {
     caisse_id: box.id,
     category_id: recherche.typeObjet.id,
     libelle_objet: recherche.libelleObjet,
+    ...objetDeclare(recherche),
     fromDateLocation: dateApi(new Date(recherche.debut)),
     toDateLocation: dateApi(new Date(recherche.fin)),
   });
