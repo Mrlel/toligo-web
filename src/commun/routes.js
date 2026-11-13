@@ -25,6 +25,7 @@ export const Routes = {
   modifierDestinataire: (index) => `/envoi/destinataire/${index}`,
   envoiColis: '/envoi/colis',
   envoiColisAjout: (indexDestinataire = 0) => `/envoi/colis/ajout?pour=${indexDestinataire}`,
+  envoiDepot: '/envoi/depot',
   envoiReception: '/envoi/reception',
   envoiRecap: '/envoi/recapitulatif',
   paiementCommande: (id) => `/commandes/${id}/paiement`,

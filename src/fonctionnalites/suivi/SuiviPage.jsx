@@ -23,7 +23,8 @@ import { Routes } from '../../commun/routes';
 import { distance, heure, jourEtHeure, moment, prenom, prix } from '../../utils/formatage';
 import { lireDate } from '../../utils/lecture';
 import { useDonnees } from '../../utils/useDonnees';
-import { libelleModeReception } from '../envoi/api';
+import { libelleModeReception, refusDuLieuDeDepot } from '../envoi/api';
+import { ChoixDepot } from '../envoi/ChoixDepot';
 import { VignetteFormat } from '../envoi/ColisCommun';
 import { AttentePaiement, fermerOnglet, ouvrirPagePaiement, preparerOngletPaiement } from '../paiement/paiement';
 import { changerFormatColis, demanderNouveauBox, detailColis, libelleStatutColis, payerComplement, positionColis } from './api';
@@ -209,6 +210,8 @@ function ActionRequise({ colis, onActualiser }) {
   const confirmer = useConfirmation();
   const [enCours, setEnCours] = useState(false);
   const [choixFormat, setChoixFormat] = useState(false);
+  // Ouverte quand le site de dépôt choisi n'a plus de box libre (§9.1).
+  const [choixSite, setChoixSite] = useState(false);
   // Vrai une fois la page GeniusPay du complément ouverte.
   const [attentePaiement, setAttentePaiement] = useState(false);
   const code = colis.codeSuivi;
@@ -231,22 +234,25 @@ function ActionRequise({ colis, onActualiser }) {
   const action = colis.action;
   if (!action) return null;
 
-  async function nouveauBox(apresExpiration) {
-    if (!apresExpiration) {
+  async function nouveauBox(apresExpiration, entrepotId = null) {
+    if (!apresExpiration && !entrepotId) {
       const ok = await confirmer({
         titre: 'Demander un autre box ?',
-        texte: 'Le box actuel et son code ne serviront plus. Tôligo vous attribue un autre box proche, avec un nouveau code.',
+        texte: 'Le box actuel et son code ne serviront plus. Tôligo vous attribue un autre box du même site de dépôt, avec un nouveau code.',
         accepter: 'Demander un autre box',
       });
       if (!ok) return;
     }
     setEnCours(true);
     try {
-      const resultat = await demanderNouveauBox(code);
+      const resultat = await demanderNouveauBox(code, entrepotId);
       afficherMessage(`Nouveau box ${resultat.boxNumero ?? ''} : déposez le colis avec le code ${resultat.code ?? ''}.`);
+      setChoixSite(false);
       onActualiser();
     } catch (erreur) {
       afficherErreur(erreur);
+      // §9.1 : plus de box libre dans le site choisi, il faut en changer.
+      if (refusDuLieuDeDepot(erreur)) setChoixSite(true);
     } finally {
       setEnCours(false);
     }
@@ -285,7 +291,28 @@ function ActionRequise({ colis, onActualiser }) {
           <Bouton variante="texte" compact enCours={enCours} onClick={() => nouveauBox(false)}>
             Le box est inutilisable
           </Bouton>
+          <Bouton variante="texte" compact onClick={() => setChoixSite(true)}>
+            Déposer dans un autre site
+          </Bouton>
         </div>
+        <Modale
+          ouverte={choixSite}
+          onFermer={() => setChoixSite(false)}
+          titre="Choisir un autre site de dépôt"
+          haute
+        >
+          {colis.expediteurLatitude === null || colis.expediteurLongitude === null ? (
+            <EncadreInfo>L'adresse d'expédition de cette commande n'est pas localisée : le site ne peut pas être changé ici.</EncadreInfo>
+          ) : (
+            <ChoixDepot
+              position={{ latitude: colis.expediteurLatitude, longitude: colis.expediteurLongitude }}
+              formats={colis.format?.id ? [colis.format.id] : []}
+              choix={null}
+              avecAutomatique={false}
+              onChoisir={(depot) => depot && nouveauBox(true, depot.site.id)}
+            />
+          )}
+        </Modale>
         <ChoixFormat
           colis={colis}
           ouverte={choixFormat}

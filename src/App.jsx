@@ -27,6 +27,7 @@ import CommandeConfirmeePage from './fonctionnalites/envoi/CommandeConfirmeePage
 import DestinatairePage from './fonctionnalites/envoi/DestinatairePage';
 import EnvoiAdressesPage from './fonctionnalites/envoi/EnvoiAdressesPage';
 import EnvoiColisPage from './fonctionnalites/envoi/EnvoiColisPage';
+import EnvoiDepotPage from './fonctionnalites/envoi/EnvoiDepotPage';
 import EnvoiReceptionPage from './fonctionnalites/envoi/EnvoiReceptionPage';
 import EnvoiRecapPage from './fonctionnalites/envoi/EnvoiRecapPage';
 import { FournisseurEnvoi } from './fonctionnalites/envoi/EtatEnvoi';
@@ -132,6 +133,7 @@ export default function App() {
                     <Route path="/envoi/destinataire/:index" element={<DestinatairePage />} />
                     <Route path={Routes.envoiColis} element={<EnvoiColisPage />} />
                     <Route path="/envoi/colis/ajout" element={<ColisAjoutPage />} />
+                    <Route path={Routes.envoiDepot} element={<EnvoiDepotPage />} />
                     <Route path={Routes.envoiReception} element={<EnvoiReceptionPage />} />
                     <Route path={Routes.envoiRecap} element={<EnvoiRecapPage />} />
                     <Route path="/commandes/:id/paiement" element={<PaiementCommandePage />} />

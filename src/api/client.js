@@ -85,7 +85,14 @@ function construireUrl(chemin, parametres) {
   // l'adresse de la page. Une adresse absolue reste telle quelle.
   const url = new URL(API_URL + chemin, window.location.origin);
   Object.entries(parametres ?? {}).forEach(([cle, valeur]) => {
-    if (valeur !== null && valeur !== undefined) url.searchParams.set(cle, valeur);
+    if (valeur === null || valeur === undefined) return;
+    // Un tableau part en `cle[]=a&cle[]=b`, la forme que Laravel lit comme un
+    // tableau. `set` aurait collé les valeurs avec des virgules.
+    if (Array.isArray(valeur)) {
+      valeur.forEach((element) => url.searchParams.append(`${cle}[]`, element));
+      return;
+    }
+    url.searchParams.set(cle, valeur);
   });
   return url.toString();
 }

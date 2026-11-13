@@ -52,8 +52,9 @@ export default function EnvoiColisPage() {
       afficherMessage('Choisissez un format et décrivez le contenu de chaque colis.');
       return;
     }
-    // Le brouillon est créé à l'étape suivante, avec le mode de réception.
-    naviguer(Routes.envoiReception);
+    // Les formats sont connus : l'étape suivante peut proposer les sites de
+    // dépôt capables d'accueillir tous les colis (§9.1).
+    naviguer(Routes.envoiDepot);
   }
 
   return (

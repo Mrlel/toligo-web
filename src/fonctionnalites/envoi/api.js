@@ -46,6 +46,61 @@ function versStation(json) {
   };
 }
 
+/** Site de dépôt (entrepôt desservi par une station). */
+function versSite(json) {
+  if (!json || typeof json !== 'object') return null;
+  return {
+    id: json.id,
+    nom: json.nom ?? '',
+    adresse: json.adresse ?? null,
+    latitude: lireNombre(json.latitude),
+    longitude: lireNombre(json.longitude),
+    distanceKm: lireNombre(json.distance_km),
+    nbBoxLibres: lireNombre(json.nb_box_libres) ?? 0,
+    placesDisponibles: lireNombre(json.places_disponibles),
+    // Null sans `formats` : on ne sait alors rien de la capacité du site.
+    accueilleToutLaCommande: json.accueille_toute_la_commande ?? null,
+  };
+}
+
+/**
+ * Stations qui desservent l'adresse d'expédition, de la plus proche à la plus
+ * lointaine (§9.1). Au-delà du rayon de desserte, aucune n'est proposée : la
+ * liste vide n'est pas une erreur.
+ *
+ * @param {{latitude: number, longitude: number}} position Adresse d'expédition.
+ */
+export async function stationsDeDepot({ latitude, longitude }) {
+  const liste = lireListe(await api.get('/client/stations', { latitude, longitude }));
+  return liste.map((json) => ({
+    ...versStation(json),
+    code: json.code ?? '',
+    distanceKm: lireNombre(json.distance_km),
+    nbSites: lireNombre(json.nb_sites) ?? 0,
+  }));
+}
+
+/**
+ * Sites de dépôt d'une station, du plus proche au plus lointain. `formats` :
+ * un identifiant de format par colis ; sans eux, la capacité du site reste
+ * inconnue (`accueilleToutLaCommande` nul).
+ */
+export async function sitesDeDepot(stationId, { latitude, longitude }, formats = []) {
+  const chemin = `/client/stations/${encodeURIComponent(stationId)}/entrepots`;
+  return lireListe(await api.get(chemin, { latitude, longitude, formats })).map(versSite);
+}
+
+/**
+ * Le refus du serveur porte-t-il sur le lieu de dépôt choisi ? Dans ce cas
+ * l'écran de choix est le bon endroit pour le corriger : site devenu plein,
+ * station qui ne dessert plus l'adresse, site détaché de sa station.
+ */
+export function refusDuLieuDeDepot(erreur) {
+  const champs = erreur?.erreurs ?? {};
+  if (champs.entrepot_depot_id || champs.station_depart_id) return true;
+  return /site de dépôt|box libres|ne dessert pas votre adresse/i.test(erreur?.message ?? '');
+}
+
 /** Colis d'une commande, tel que l'API le renvoie. */
 function versColisCommande(json) {
   const box = json.box && typeof json.box === 'object' ? json.box : null;
@@ -90,6 +145,9 @@ export function versCommande(json) {
     modeReception: mode?.code ?? null,
     stationDepart: versStation(json.station_depart),
     stationArrivee: versStation(json.station_arrivee),
+    // Site ou l'expediteur depose ses colis : celui qu'il a choisi, ou celui
+    // sur lequel le serveur a replie la commande (§9.1).
+    siteDepot: versSite(json.site_depot),
     // Adresse de l'expediteur (colonnes `collecte_*` cote serveur).
     expediteurAdresse: collecte.adresse ?? null,
     expediteurNom: collecte.nom_contact ?? null,

@@ -195,7 +195,13 @@ export default function EnvoiRecapPage() {
 
         <div className="encadre-info" style={{ fontSize: 12.5, marginTop: 12 }}>
           <IconeBox size={18} />
-          <span>Après la confirmation, vous recevez un box Tôligo près de chez vous et un code pour y déposer vos colis.</span>
+          <span>
+            {commande.siteDepot
+              ? `Après la confirmation, vous recevez un box et son code pour déposer vos colis à ${commande.siteDepot.nom}${
+                  commande.siteDepot.adresse ? ` (${commande.siteDepot.adresse})` : ''
+                }.`
+              : 'Après la confirmation, vous recevez un box Tôligo près de chez vous et un code pour y déposer vos colis.'}
+          </span>
         </div>
 
         <div className="total" style={{ marginTop: 14 }}>

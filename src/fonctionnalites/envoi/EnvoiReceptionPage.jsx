@@ -5,7 +5,7 @@ import { Store, Truck } from 'lucide-react';
 import { BarreEtapes, Bouton, Cascade, EncadreInfo, EnTete, IconeBox, Option, Page, PiedDAction, useMessages } from '../../composants';
 import { Routes } from '../../commun/routes';
 import { prenom, prix } from '../../utils/formatage';
-import { MODES_RECEPTION } from './api';
+import { MODES_RECEPTION, refusDuLieuDeDepot } from './api';
 import { etapesEnvoi, totalIndicatif, useEnvoi } from './EtatEnvoi';
 import './envoi.css';
 
@@ -40,6 +40,9 @@ export default function EnvoiReceptionPage() {
       naviguer(Routes.envoiRecap);
     } catch (erreur) {
       afficherErreur(erreur);
+      // §9.1 : un refus qui porte sur le lieu de dépôt (site sans box libre,
+      // station hors zone) se corrige à l'étape précédente.
+      if (refusDuLieuDeDepot(erreur)) naviguer(Routes.envoiDepot);
     } finally {
       setEnCours(false);
     }
@@ -48,7 +51,7 @@ export default function EnvoiReceptionPage() {
   return (
     <Page
       titre="Nouvel envoi"
-      entete={<EnTete titre="Nouvel envoi" gris repli={Routes.envoiColis} />}
+      entete={<EnTete titre="Nouvel envoi" gris repli={Routes.envoiDepot} />}
       pied={
         <PiedDAction
           arrondi
@@ -69,7 +72,7 @@ export default function EnvoiReceptionPage() {
         </PiedDAction>
       }
     >
-      <BarreEtapes etapes={etapesEnvoi(brouillon)} courante={2} />
+      <BarreEtapes etapes={etapesEnvoi(brouillon)} courante={3} />
       <h2 className="envoi__question" style={{ marginTop: 12 }}>
         Comment remettre vos colis à {prenom(destinataire.nom)} ?
       </h2>

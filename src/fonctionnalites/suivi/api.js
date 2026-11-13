@@ -202,8 +202,11 @@ function versNouveauBox(json) {
  * Réservation expirée ou box inutilisable : un autre box est attribué, avec
  * un nouveau code. L'ancien box n'est plus proposé.
  */
-export async function demanderNouveauBox(code) {
-  return versNouveauBox(lireObjet(await api.post(`/client/colis/${encodeURIComponent(code)}/nouveau-box`)));
+export async function demanderNouveauBox(code, entrepotId = null) {
+  // §9.1 : sans `entrepot_id`, le nouveau box reste dans le site choisi par
+  // l'expéditeur. Avec lui, il change de site de dépôt.
+  const corps = entrepotId ? { entrepot_id: entrepotId } : undefined;
+  return versNouveauBox(lireObjet(await api.post(`/client/colis/${encodeURIComponent(code)}/nouveau-box`, corps)));
 }
 
 /**

@@ -35,6 +35,9 @@ const BROUILLON_VIDE = {
   collecte: null,
   instructions: '',
   destinataires: [],
+  // Lieu de dépôt choisi par l'expéditeur (§9.1) : { station, site }. Nul =
+  // Tôligo choisit, comportement d'origine.
+  depot: null,
   modeReception: 'retrait_station',
   commande: null,
   envoye: null,
@@ -83,7 +86,7 @@ export function rangDestinataire(brouillon, nom) {
 
 /** Étapes affichées en haut du parcours. */
 export function etapesEnvoi() {
-  return ['Adresses', 'Colis', 'Réception', 'Paiement'];
+  return ['Adresses', 'Colis', 'Dépôt', 'Réception', 'Paiement'];
 }
 
 /** Corps de POST /client/commandes : destinataire et mode portés par la commande. */
@@ -92,6 +95,10 @@ function versApi(brouillon) {
   return {
     source: 'application',
     adresse_collecte_id: brouillon.collecte.id,
+    // §9.1 : les deux vont ensemble, et sont omis quand l'expéditeur laisse
+    // Tôligo choisir son box.
+    station_depart_id: brouillon.depot?.station?.id ?? null,
+    entrepot_depot_id: brouillon.depot?.site?.id ?? null,
     mode_reception: brouillon.modeReception,
     destinataire_nom: destinataire.nom,
     destinataire_telephone: destinataire.telephone,
@@ -125,16 +132,26 @@ export function FournisseurEnvoi({ children }) {
 
   const modifier = useCallback((changements) => setBrouillon((b) => ({ ...b, ...changements })), []);
 
-  /** Remplace la liste des destinataires à partir de la précédente. */
+  /**
+   * Remplace la liste des destinataires à partir de la précédente. Le lieu de
+   * dépôt est oublié : un site validé pour un colis « petit » peut ne plus
+   * convenir après ajout d'un colis, et le serveur refuserait la commande à la
+   * toute fin du parcours (§9.1).
+   */
   const modifierDestinataires = useCallback(
-    (transformer) => setBrouillon((b) => ({ ...b, destinataires: transformer(b.destinataires) })),
+    (transformer) => setBrouillon((b) => ({ ...b, depot: null, destinataires: transformer(b.destinataires) })),
     [],
   );
 
   const actions = {
     reinitialiser: () => setBrouillon(BROUILLON_VIDE),
 
-    choisirCollecte: (adresse) => modifier({ collecte: adresse }),
+    // L'adresse d'expédition commande la liste des stations : le lieu de dépôt
+    // choisi pour l'ancienne adresse n'a plus de sens.
+    choisirCollecte: (adresse) => modifier({ collecte: adresse, depot: null }),
+
+    /** Lieu de dépôt retenu (§9.1), ou `null` pour laisser Tôligo choisir. */
+    choisirDepot: (depot) => modifier({ depot }),
 
     definirInstructions: (texte) => modifier({ instructions: texte }),
 
@@ -142,6 +159,7 @@ export function FournisseurEnvoi({ children }) {
     ajouterDestinataire: ({ nom, telephone, lieu, adresse, repere }) =>
       setBrouillon((b) => ({
         ...b,
+        depot: null,
         prochaineCle: b.prochaineCle + 2,
         destinataires: [
           {
@@ -165,6 +183,7 @@ export function FournisseurEnvoi({ children }) {
     ajouterColis: (indexDestinataire, { format, description, fragile }) =>
       setBrouillon((b) => ({
         ...b,
+        depot: null,
         prochaineCle: b.prochaineCle + 1,
         destinataires: b.destinataires.map((d, i) =>
           i === indexDestinataire ? { ...d, colis: [...d.colis, { cle: b.prochaineCle, format, description, fragile }] } : d,
