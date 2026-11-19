@@ -31,7 +31,6 @@ import EnvoiDepotPage from './fonctionnalites/envoi/EnvoiDepotPage';
 import EnvoiReceptionPage from './fonctionnalites/envoi/EnvoiReceptionPage';
 import EnvoiRecapPage from './fonctionnalites/envoi/EnvoiRecapPage';
 import { FournisseurEnvoi } from './fonctionnalites/envoi/EtatEnvoi';
-import PaiementCommandePage from './fonctionnalites/envoi/PaiementCommandePage';
 import NotificationsPage from './fonctionnalites/notifications/NotificationsPage';
 import PaiementRetourPage from './fonctionnalites/paiement/PaiementRetourPage';
 import AidePage from './fonctionnalites/profil/AidePage';
@@ -136,7 +135,6 @@ export default function App() {
                     <Route path={Routes.envoiDepot} element={<EnvoiDepotPage />} />
                     <Route path={Routes.envoiReception} element={<EnvoiReceptionPage />} />
                     <Route path={Routes.envoiRecap} element={<EnvoiRecapPage />} />
-                    <Route path="/commandes/:id/paiement" element={<PaiementCommandePage />} />
                     <Route path="/commandes/:id/confirmee" element={<CommandeConfirmeePage />} />
 
                     {/* Suivi */}

@@ -25,7 +25,8 @@ import './envoi.css';
  * elle part dès qu'elle est choisie, sur le colis du brouillon.
  *
  * « Payer » confirme la commande puis ouvre directement la page GeniusPay
- * dans un nouvel onglet ; l'écran Paiement attend ensuite la confirmation.
+ * dans un nouvel onglet ; le client retrouve sa commande dans « Mes envois »
+ * (le suivi du colis permet de relancer le paiement).
  */
 export default function EnvoiRecapPage() {
   const naviguer = useNavigate();
@@ -88,18 +89,18 @@ export default function EnvoiRecapPage() {
       if (confirmee.montantTotal !== total) afficherMessage(`Montant mis à jour : ${prix(confirmee.montantTotal)}.`);
 
       if (confirmee.modeReglement === 'en_ligne') {
-        let paiement = null;
         try {
-          paiement = await payerCommande(confirmee.id);
+          const paiement = await payerCommande(confirmee.id);
           if (!ouvrirPagePaiement(paiement.checkoutUrl, onglet)) {
             afficherMessage("Impossible d'ouvrir la page de paiement. Autorisez les fenêtres pop-up pour ce site.");
           }
         } catch (erreur) {
-          // La commande est confirmée : le paiement pourra être relancé depuis l'écran Paiement.
+          // La commande est confirmée : le paiement pourra être relancé depuis le suivi du colis.
           fermerOnglet(onglet);
           afficherErreur(erreur);
         }
-        naviguer(Routes.paiementCommande(confirmee.id), { replace: true, state: { paiement } });
+        // Le client paie sur la page GeniusPay ; sa commande est dans « Mes envois ».
+        naviguer(Routes.envois, { replace: true });
       } else {
         naviguer(Routes.commandeConfirmee(confirmee.id), { replace: true });
       }

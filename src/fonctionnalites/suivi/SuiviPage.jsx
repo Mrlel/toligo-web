@@ -23,7 +23,7 @@ import { Routes } from '../../commun/routes';
 import { distance, heure, jourEtHeure, moment, prenom, prix } from '../../utils/formatage';
 import { lireDate } from '../../utils/lecture';
 import { useDonnees } from '../../utils/useDonnees';
-import { libelleModeReception, refusDuLieuDeDepot } from '../envoi/api';
+import { libelleModeReception, payerCommande, refusDuLieuDeDepot } from '../envoi/api';
 import { ChoixDepot } from '../envoi/ChoixDepot';
 import { VignetteFormat } from '../envoi/ColisCommun';
 import { AttentePaiement, fermerOnglet, ouvrirPagePaiement, preparerOngletPaiement } from '../paiement/paiement';
@@ -204,32 +204,31 @@ function CarteSuivi({ colis, position }) {
  * inutilisable (CDC V3.3 §21.9) : un autre box et un nouveau code lui sont
  * alors attribués.
  */
-function ActionRequise({ colis, onActualiser }) {
-  const naviguer = useNavigate();
-  const { afficherMessage, afficherErreur } = useMessages();
+function ActionRequise({ colis, onActualiser }) {  const { afficherMessage, afficherErreur } = useMessages();
   const confirmer = useConfirmation();
   const [enCours, setEnCours] = useState(false);
   const [choixFormat, setChoixFormat] = useState(false);
   // Ouverte quand le site de dépôt choisi n'a plus de box libre (§9.1).
   const [choixSite, setChoixSite] = useState(false);
-  // Vrai une fois la page GeniusPay du complément ouverte.
+  // Vrai une fois la page GeniusPay (commande ou complément) ouverte.
   const [attentePaiement, setAttentePaiement] = useState(false);
   const code = colis.codeSuivi;
+  const typeAction = colis.action?.type;
 
-  /** Le complément est payé dès que le suivi ne le demande plus. */
-  const complementPaye = useCallback(async () => {
+  /** Le paiement est confirmé dès que le suivi ne le demande plus. */
+  const paiementConfirme = useCallback(async () => {
     try {
-      return (await detailColis(code)).action?.type !== 'complement';
+      return (await detailColis(code)).action?.type !== typeAction;
     } catch {
       return false;
     }
-  }, [code]);
+  }, [code, typeAction]);
 
-  const surComplementPaye = useCallback(() => {
+  const surPaiementConfirme = useCallback(() => {
     setAttentePaiement(false);
-    afficherMessage('Complément payé. Merci !');
+    afficherMessage(typeAction === 'complement' ? 'Complément payé. Merci !' : 'Paiement reçu. Merci !');
     onActualiser();
-  }, [afficherMessage, onActualiser]);
+  }, [afficherMessage, onActualiser, typeAction]);
 
   const action = colis.action;
   if (!action) return null;
@@ -263,7 +262,8 @@ function ActionRequise({ colis, onActualiser }) {
     const onglet = preparerOngletPaiement();
     setEnCours(true);
     try {
-      const paiement = await payerComplement(code);
+      // Commande non payée ou complément de format : même page GeniusPay.
+      const paiement = action.type === 'complement' ? await payerComplement(code) : await payerCommande(action.commandeId);
       if (!ouvrirPagePaiement(paiement.checkoutUrl, onglet)) {
         afficherMessage("Impossible d'ouvrir la page de paiement. Autorisez les fenêtres pop-up pour ce site.");
       }
@@ -348,7 +348,7 @@ function ActionRequise({ colis, onActualiser }) {
           Le format du colis a changé : un complément de <strong>{montant}</strong> reste à payer.
         </EncadreInfo>
         {attentePaiement ? (
-          <AttentePaiement estPaye={complementPaye} onPaye={surComplementPaye} onRelancer={payer} />
+          <AttentePaiement estPaye={paiementConfirme} onPaye={surPaiementConfirme} onRelancer={payer} />
         ) : (
           <Bouton variante="accent" enCours={enCours} onClick={payer}>
             Payer {montant}
@@ -365,9 +365,13 @@ function ActionRequise({ colis, onActualiser }) {
       <EncadreInfo accent icone={BellRing}>
         Paiement en attente : votre box de dépôt vous est attribué dès qu'il est confirmé.
       </EncadreInfo>
-      <Bouton variante="accent" onClick={() => naviguer(Routes.paiementCommande(action.commandeId))}>
-        Payer maintenant
-      </Bouton>
+      {attentePaiement ? (
+        <AttentePaiement estPaye={paiementConfirme} onPaye={surPaiementConfirme} onRelancer={payer} />
+      ) : (
+        <Bouton variante="accent" enCours={enCours} onClick={payer}>
+          Payer maintenant
+        </Bouton>
+      )}
     </div>
   );
 }

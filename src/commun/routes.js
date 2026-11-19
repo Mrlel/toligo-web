@@ -28,7 +28,6 @@ export const Routes = {
   envoiDepot: '/envoi/depot',
   envoiReception: '/envoi/reception',
   envoiRecap: '/envoi/recapitulatif',
-  paiementCommande: (id) => `/commandes/${id}/paiement`,
   commandeConfirmee: (id) => `/commandes/${id}/confirmee`,
 
   // --- Suivi ---

@@ -31,11 +31,9 @@ const ONGLETS = [
 /** Nombre de « terminés récemment » rappelés sous les envois en cours. */
 const NB_TERMINES_RECENTS = 3;
 
-/** Ouvre l'écran adapté à un colis : paiement, livré ou suivi (le suivi affiche le code de dépôt). */
+/** Ouvre l'écran adapté à un colis : livré ou suivi (le suivi affiche le code de dépôt et le bouton de paiement). */
 export function ouvrirColis(naviguer, colis) {
-  const action = colis.action?.type;
-  if (action === 'paiement' && colis.action.commandeId) naviguer(Routes.paiementCommande(colis.action.commandeId));
-  else if (colis.statut === 'livre') naviguer(Routes.colisLivre(colis.codeSuivi));
+  if (colis.statut === 'livre') naviguer(Routes.colisLivre(colis.codeSuivi));
   else naviguer(Routes.colis(colis.codeSuivi));
 }
 
