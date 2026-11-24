@@ -151,8 +151,8 @@ function CarteEnvoi({ colis }) {
 
 /** Badge d'un envoi qui attend le client. */
 const BADGES_ACTION = {
-  depot_box: 'À déposer',
-  nouveau_box: 'Box expiré',
+  depot_entrepot: 'À déposer',
+  nouveau_code: 'Code expiré',
   paiement: 'Paiement en attente',
   complement: 'Complément à payer',
 };
@@ -160,12 +160,12 @@ const BADGES_ACTION = {
 /** Ce que le client doit faire, en une ligne ; null si rien n'est attendu. */
 export function detailAction(colis) {
   switch (colis.action?.type) {
-    case 'depot_box':
-      return `Déposez-le dans le box ${colis.action.box ?? ''} avec le code ${colis.action.code ?? ''}`;
-    case 'nouveau_box':
-      return 'Réservation du box expirée : demandez un nouveau box';
+    case 'depot_entrepot':
+      return `Apportez-le à ${colis.action.entrepot?.nom ?? 'l’entrepôt'} avec le code ${colis.action.code ?? ''}`;
+    case 'nouveau_code':
+      return 'Code de dépôt expiré : demandez-en un nouveau';
     case 'paiement':
-      return 'Réglez la commande pour recevoir votre box de dépôt';
+      return 'Réglez la commande pour recevoir votre code de dépôt';
     case 'complement':
       return `Format changé : complément de ${prix(colis.action.montant ?? 0)} à payer`;
     default:

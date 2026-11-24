@@ -38,7 +38,7 @@ export default function EnvoiDepotPage() {
           arrondi
           entete={
             <span className="extensible texte-secondaire" style={{ fontSize: 13.5 }}>
-              {site ? `Dépôt à ${site.nom}` : 'Tôligo choisira le box le plus proche'}
+              {site ? `Dépôt à ${site.nom}` : 'Tôligo choisira l’entrepôt le plus proche'}
             </span>
           }
         >
@@ -50,7 +50,7 @@ export default function EnvoiDepotPage() {
       <h2 className="envoi__question" style={{ marginTop: 12 }}>
         Où déposez-vous vos colis ?
       </h2>
-      <p className="envoi__sous-titre">Le camion de la station passe les prendre dans le box où vous les déposez</p>
+      <p className="envoi__sous-titre">Vous les apportez au gestionnaire de l’entrepôt, qui les range dans leurs box</p>
 
       <ChoixDepot
         position={brouillon.collecte}
@@ -61,8 +61,9 @@ export default function EnvoiDepotPage() {
 
       <div style={{ marginTop: 14 }}>
         <EncadreInfo>
-          Le box exact et son code d'ouverture vous sont donnés après le paiement. Si le site choisi n'a plus de box
-          libre à ce moment-là, Tôligo vous en propose un autre dans la même station et vous prévient.
+          Votre code de dépôt vous est donné après le paiement : présentez-le au gestionnaire de l'entrepôt avec vos colis.
+          Si le site choisi n'a plus de place à ce moment-là, Tôligo vous en propose un autre dans la même station et vous
+          prévient.
         </EncadreInfo>
       </div>
     </Page>

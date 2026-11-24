@@ -5,24 +5,30 @@ import { versCommune } from '../adresses/api';
 
 /**
  * Suivi des colis envoyés : « Mes envois », détail, preuves, évaluation et
- * incidents (comme suivi.dart). Parcours V3.3 : dépôt en box, ramassage,
- * stations A et B, remise.
+ * incidents (comme suivi.dart). Parcours V3.3 : réception à l'entrepôt avec
+ * le code de la commande, ramassage, stations A et B, remise.
  */
 
 /**
  * Ce que le client doit faire pour que le colis avance : `paiement`,
- * `depot_box` (déposer le colis avec son code), `nouveau_box` (réservation
- * expirée), `complement` (supplément de prix après un changement de format)
- * ou `evaluation`.
+ * `depot_entrepot` (apporter le colis à l'entrepôt et donner le code de la
+ * commande au gestionnaire), `nouveau_code` (code expiré), `complement`
+ * (supplément de prix après la pesée) ou `evaluation`.
  */
 function versAction(json) {
   if (!json || typeof json !== 'object') return null;
+  const entrepot = json.entrepot && typeof json.entrepot === 'object' ? json.entrepot : null;
   return {
     type: json.type ?? '',
     commandeId: json.commande_id ?? null,
-    box: json.box ?? null,
     code: json.code ?? null,
     expireLe: lireDate(json.expire_le),
+    entrepot: entrepot && {
+      nom: entrepot.nom ?? '',
+      adresse: entrepot.adresse ?? null,
+      latitude: lireNombre(entrepot.latitude),
+      longitude: lireNombre(entrepot.longitude),
+    },
     montant: lireNombre(json.montant),
   };
 }
@@ -186,43 +192,6 @@ export async function signalerIncident(code, { type, description, photo }) {
   return json.reference ?? null;
 }
 
-// --- Avant le dépôt dans le box (CDC V3.3 §21.9, D11) ---
-
-/** Box de réception et code de dépôt renvoyés après un changement. */
-function versNouveauBox(json) {
-  const box = lireObjet(json.box);
-  return {
-    boxNumero: box.numero ?? null,
-    code: json.code_ouverture ?? null,
-    expireLe: lireDate(json.code_expire_le),
-  };
-}
-
-/**
- * Réservation expirée ou box inutilisable : un autre box est attribué, avec
- * un nouveau code. L'ancien box n'est plus proposé.
- */
-export async function demanderNouveauBox(code, entrepotId = null) {
-  // §9.1 : sans `entrepot_id`, le nouveau box reste dans le site choisi par
-  // l'expéditeur. Avec lui, il change de site de dépôt.
-  const corps = entrepotId ? { entrepot_id: entrepotId } : undefined;
-  return versNouveauBox(lireObjet(await api.post(`/client/colis/${encodeURIComponent(code)}/nouveau-box`, corps)));
-}
-
-/**
- * Le colis ne tient pas dans son box : nouveau format, nouveau prix et, si
- * un box était attribué, un autre box qui accepte ce format.
- */
-export async function changerFormatColis(code, formatId) {
-  const json = lireObjet(await api.put(`/client/colis/${encodeURIComponent(code)}/format`, { format_colis_id: formatId }));
-  return {
-    ...versNouveauBox(json),
-    prix: lireNombre(json.prix),
-    complement: lireNombre(json.complement_a_payer),
-    remboursement: lireNombre(json.remboursement),
-  };
-}
-
 /** Ouvre le paiement GeniusPay du complément de prix d'un colis. */
 export async function payerComplement(code) {
   const json = lireObjet(await api.post(`/client/colis/${encodeURIComponent(code)}/paiement`));
@@ -234,7 +203,7 @@ export function libelleStatutColis(statut) {
   const libelles = {
     cree: 'Confirmé',
     en_attente_depot: 'À déposer',
-    depose_en_box: 'Déposé en box',
+    recu_entrepot: 'Reçu à l’entrepôt',
     en_ramassage: 'Ramassage en cours',
     ramasse: 'Ramassé',
     arrive_station_a: 'En station de départ',

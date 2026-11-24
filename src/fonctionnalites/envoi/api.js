@@ -104,7 +104,6 @@ export function refusDuLieuDeDepot(erreur) {
 /** Colis d'une commande, tel que l'API le renvoie. */
 function versColisCommande(json) {
   const box = json.box && typeof json.box === 'object' ? json.box : null;
-  const code = json.code_depot && typeof json.code_depot === 'object' ? json.code_depot : null;
   return {
     id: json.id,
     codeSuivi: json.code_suivi ?? '',
@@ -114,14 +113,10 @@ function versColisCommande(json) {
     prix: lireNombre(json.prix) ?? 0,
     // Photo exigée avant la confirmation (§11.2).
     aUnePhoto: lireBooleen(json.a_une_photo),
-    // Box de réception où déposer le colis, et son code à usage unique.
+    // Box de réception réservé : c'est le gestionnaire de l'entrepôt qui y
+    // range le colis, le client n'a pas de code de box.
     box: box && { numero: box.numero ?? '', adresse: box.adresse ?? null },
-    codeDepot: code && {
-      code: code.code ?? null,
-      statut: code.statut ?? '',
-      expireLe: lireDate(code.expire_le),
-      utiliseLe: lireDate(code.utilise_le),
-    },
+    // Réception à l'entrepôt (rangement dans le box).
     deposeLe: lireDate(json.depose_le),
   };
 }
@@ -148,6 +143,14 @@ export function versCommande(json) {
     // Site ou l'expediteur depose ses colis : celui qu'il a choisi, ou celui
     // sur lequel le serveur a replie la commande (§9.1).
     siteDepot: versSite(json.site_depot),
+    // Code de réception de la commande : le client le donne au gestionnaire
+    // du site de dépôt, avec ses colis. Null avant le paiement (ou tant que
+    // les box ne sont pas tous réservés), après la réception, ou expiré.
+    codeReception:
+      json.code_reception && typeof json.code_reception === 'object'
+        ? { code: json.code_reception.code ?? '', expireLe: lireDate(json.code_reception.expire_le) }
+        : null,
+    recueLe: lireDate(json.recue_le),
     // Adresse de l'expediteur (colonnes `collecte_*` cote serveur).
     expediteurAdresse: collecte.adresse ?? null,
     expediteurNom: collecte.nom_contact ?? null,
@@ -193,6 +196,15 @@ export async function remplacerCommande(id, donnees) {
 
 export async function detailCommande(id) {
   return versCommande(lireObjet(await api.get(`/client/commandes/${id}`)));
+}
+
+/**
+ * Nouveau code de réception, après expiration du précédent : les box sont de
+ * nouveau réservés (même site si possible). Un code encore valable est
+ * simplement renvoyé. Refus (422) si aucun box n'est libre pour le moment.
+ */
+export async function demanderNouveauCodeReception(id) {
+  return versCommande(lireObjet(await api.post(`/client/commandes/${id}/code-reception`)));
 }
 
 export async function devisCommande(id) {

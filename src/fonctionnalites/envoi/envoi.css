@@ -570,6 +570,68 @@
   background: #ebebed;
 }
 
+a.code-suivi {
+  color: var(--encre);
+  text-decoration: none;
+}
+
+/* Code de réception d'une commande, à donner au gestionnaire de l'entrepôt. */
+.code-reception {
+  padding: 16px;
+  border-radius: var(--rayon-carte);
+  background: var(--accent-pale);
+  border: 1px solid var(--accent-clair);
+  text-align: left;
+}
+
+.code-reception__libelle {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--accent-fonce);
+}
+
+.code-reception__ligne {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.code-reception__code {
+  flex: 1;
+  font-family: var(--police-titre);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 5px;
+  color: var(--encre);
+}
+
+.code-reception__validite {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--texte-secondaire);
+}
+
+.code-reception__site {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: var(--rayon-petit);
+  background: var(--blanc);
+  font-size: 13.5px;
+}
+
+.code-reception__aide {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--texte-secondaire);
+}
+
 /* Photo d'un colis dans le récapitulatif : vignette cliquable. */
 .photo-colis {
   position: relative;

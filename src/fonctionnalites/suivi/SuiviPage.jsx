@@ -1,33 +1,28 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Marker } from 'react-leaflet';
-import { BellRing, Camera, Check, CreditCard, KeyRound, Share2, TriangleAlert } from 'lucide-react';
+import { BellRing, Camera, Check, CreditCard, Share2, TriangleAlert } from 'lucide-react';
 
 import {
   Bouton,
   BoutonRond,
   EncadreInfo,
   EnTete,
-  Modale,
-  Option,
   Page,
   Pastille,
-  useConfirmation,
   useMessages,
   useRetour,
   VueDonnees,
 } from '../../composants';
 import { ABIDJAN, AjustementTaille, Cadrage, CarteOsm, iconeRepere } from '../../commun/carte';
-import { listerFormats, poidsLisible } from '../../commun/formats';
 import { Routes } from '../../commun/routes';
-import { distance, heure, jourEtHeure, moment, prenom, prix } from '../../utils/formatage';
+import { distance, heure, moment, prenom, prix } from '../../utils/formatage';
 import { lireDate } from '../../utils/lecture';
 import { useDonnees } from '../../utils/useDonnees';
-import { libelleModeReception, payerCommande, refusDuLieuDeDepot } from '../envoi/api';
-import { ChoixDepot } from '../envoi/ChoixDepot';
-import { VignetteFormat } from '../envoi/ColisCommun';
+import { demanderNouveauCodeReception, libelleModeReception, payerCommande } from '../envoi/api';
+import { CodeReception } from '../envoi/CodeReception';
 import { AttentePaiement, fermerOnglet, ouvrirPagePaiement, preparerOngletPaiement } from '../paiement/paiement';
-import { changerFormatColis, demanderNouveauBox, detailColis, libelleStatutColis, payerComplement, positionColis } from './api';
+import { detailColis, libelleStatutColis, payerComplement, positionColis } from './api';
 import './suivi.css';
 
 /** Toutes les 20 secondes : l'hébergement actuel ne permet pas le temps réel (WebSocket). */
@@ -196,20 +191,13 @@ function CarteSuivi({ colis, position }) {
 }
 
 /**
- * Ce que le client doit faire : déposer son colis dans le box avec son code,
- * demander un nouveau box, payer la commande ou un complément de prix.
- *
- * Avant le dépôt, le client peut aussi changer le format d'un colis qui ne
- * tient pas dans son box, ou demander un autre box si le sien est
- * inutilisable (CDC V3.3 §21.9) : un autre box et un nouveau code lui sont
- * alors attribués.
+ * Ce que le client doit faire : apporter ses colis à l'entrepôt et donner le
+ * code de la commande au gestionnaire, demander un nouveau code après
+ * expiration, payer la commande ou un complément de prix (audit §24).
  */
-function ActionRequise({ colis, onActualiser }) {  const { afficherMessage, afficherErreur } = useMessages();
-  const confirmer = useConfirmation();
+function ActionRequise({ colis, onActualiser }) {
+  const { afficherMessage, afficherErreur } = useMessages();
   const [enCours, setEnCours] = useState(false);
-  const [choixFormat, setChoixFormat] = useState(false);
-  // Ouverte quand le site de dépôt choisi n'a plus de box libre (§9.1).
-  const [choixSite, setChoixSite] = useState(false);
   // Vrai une fois la page GeniusPay (commande ou complément) ouverte.
   const [attentePaiement, setAttentePaiement] = useState(false);
   const code = colis.codeSuivi;
@@ -233,25 +221,19 @@ function ActionRequise({ colis, onActualiser }) {  const { afficherMessage, affi
   const action = colis.action;
   if (!action) return null;
 
-  async function nouveauBox(apresExpiration, entrepotId = null) {
-    if (!apresExpiration && !entrepotId) {
-      const ok = await confirmer({
-        titre: 'Demander un autre box ?',
-        texte: 'Le box actuel et son code ne serviront plus. Tôligo vous attribue un autre box du même site de dépôt, avec un nouveau code.',
-        accepter: 'Demander un autre box',
-      });
-      if (!ok) return;
-    }
+  /** Code expiré : les box sont de nouveau réservés, puis un code est émis. */
+  async function nouveauCode() {
     setEnCours(true);
     try {
-      const resultat = await demanderNouveauBox(code, entrepotId);
-      afficherMessage(`Nouveau box ${resultat.boxNumero ?? ''} : déposez le colis avec le code ${resultat.code ?? ''}.`);
-      setChoixSite(false);
+      const commande = await demanderNouveauCodeReception(action.commandeId);
+      afficherMessage(
+        commande.codeReception
+          ? `Nouveau code de dépôt : ${commande.codeReception.code}.`
+          : 'Demande enregistrée : vous serez prévenu dès que votre code est prêt.',
+      );
       onActualiser();
     } catch (erreur) {
       afficherErreur(erreur);
-      // §9.1 : plus de box libre dans le site choisi, il faut en changer.
-      if (refusDuLieuDeDepot(erreur)) setChoixSite(true);
     } finally {
       setEnCours(false);
     }
@@ -276,65 +258,23 @@ function ActionRequise({ colis, onActualiser }) {  const { afficherMessage, affi
     }
   }
 
-  if (action.type === 'depot_box') {
+  if (action.type === 'depot_entrepot' && action.code) {
     return (
       <div style={{ marginBottom: 16 }}>
-        <EncadreInfo accent icone={KeyRound}>
-          Déposez le colis dans le box <strong>{action.box}</strong>
-          {colis.box?.adresse ? ` (${colis.box.adresse})` : ''} avec le code <strong>{action.code}</strong>
-          {action.expireLe ? `, avant le ${jourEtHeure(action.expireLe)}` : ''}. Le code ne sert qu'une fois.
-        </EncadreInfo>
-        <div className="actions-depot">
-          <Bouton variante="texte" compact onClick={() => setChoixFormat(true)}>
-            Le colis ne tient pas dans le box
-          </Bouton>
-          <Bouton variante="texte" compact enCours={enCours} onClick={() => nouveauBox(false)}>
-            Le box est inutilisable
-          </Bouton>
-          <Bouton variante="texte" compact onClick={() => setChoixSite(true)}>
-            Déposer dans un autre site
-          </Bouton>
-        </div>
-        <Modale
-          ouverte={choixSite}
-          onFermer={() => setChoixSite(false)}
-          titre="Choisir un autre site de dépôt"
-          haute
-        >
-          {colis.expediteurLatitude === null || colis.expediteurLongitude === null ? (
-            <EncadreInfo>L'adresse d'expédition de cette commande n'est pas localisée : le site ne peut pas être changé ici.</EncadreInfo>
-          ) : (
-            <ChoixDepot
-              position={{ latitude: colis.expediteurLatitude, longitude: colis.expediteurLongitude }}
-              formats={colis.format?.id ? [colis.format.id] : []}
-              choix={null}
-              avecAutomatique={false}
-              onChoisir={(depot) => depot && nouveauBox(true, depot.site.id)}
-            />
-          )}
-        </Modale>
-        <ChoixFormat
-          colis={colis}
-          ouverte={choixFormat}
-          onFermer={() => setChoixFormat(false)}
-          onChange={() => {
-            setChoixFormat(false);
-            onActualiser();
-          }}
-        />
+        <CodeReception code={action.code} expireLe={action.expireLe} site={action.entrepot} />
       </div>
     );
   }
 
-  if (action.type === 'nouveau_box') {
+  if (action.type === 'nouveau_code' && action.commandeId) {
     return (
       <div className="pile" style={{ gap: 8, marginBottom: 16 }}>
         <EncadreInfo accent icone={BellRing}>
-          La réservation du box a expiré sans dépôt. Demandez un nouveau box : Tôligo vous en attribue un autre, proche,
-          avec un nouveau code.
+          Votre code de dépôt a expiré avant que vos colis soient déposés à l'entrepôt. Demandez-en un nouveau : la place de vos
+          colis est de nouveau réservée.
         </EncadreInfo>
-        <Bouton variante="accent" enCours={enCours} onClick={() => nouveauBox(true)}>
-          Obtenir un nouveau box
+        <Bouton variante="accent" enCours={enCours} onClick={nouveauCode}>
+          Obtenir un nouveau code
         </Bouton>
       </div>
     );
@@ -363,7 +303,7 @@ function ActionRequise({ colis, onActualiser }) {  const { afficherMessage, affi
   return (
     <div className="pile" style={{ gap: 8, marginBottom: 16 }}>
       <EncadreInfo accent icone={BellRing}>
-        Paiement en attente : votre box de dépôt vous est attribué dès qu'il est confirmé.
+        Paiement en attente : votre code de dépôt vous est remis dès qu'il est confirmé.
       </EncadreInfo>
       {attentePaiement ? (
         <AttentePaiement estPaye={paiementConfirme} onPaye={surPaiementConfirme} onRelancer={payer} />
@@ -373,85 +313,6 @@ function ActionRequise({ colis, onActualiser }) {  const { afficherMessage, affi
         </Bouton>
       )}
     </div>
-  );
-}
-
-/**
- * Fenêtre « Changer de format » (D11) : le colis ne tient pas dans son box.
- * Le serveur recalcule le prix et attribue un box qui accepte ce format.
- */
-function ChoixFormat({ colis, ouverte, onFermer, onChange }) {
-  const { afficherMessage, afficherErreur } = useMessages();
-  const formats = useDonnees(listerFormats, []);
-  const [choisi, setChoisi] = useState(null);
-  const [enCours, setEnCours] = useState(false);
-
-  async function valider() {
-    if (!choisi) return;
-    setEnCours(true);
-    try {
-      const resultat = await changerFormatColis(colis.codeSuivi, choisi.id);
-      const phrases = [`Format ${choisi.libelle} enregistré.`];
-      if (resultat.code) phrases.push(`Nouveau box ${resultat.boxNumero ?? ''} : code ${resultat.code}.`);
-      if (resultat.complement) phrases.push(`Complément à payer : ${prix(resultat.complement)}.`);
-      else if (resultat.remboursement) phrases.push(`Remboursement de ${prix(resultat.remboursement)} en cours de validation.`);
-      afficherMessage(phrases.join(' '));
-      setChoisi(null);
-      onChange();
-    } catch (erreur) {
-      afficherErreur(erreur);
-    } finally {
-      setEnCours(false);
-    }
-  }
-
-  return (
-    <Modale
-      ouverte={ouverte}
-      onFermer={onFermer}
-      titre="Changer de format"
-      pied={
-        <Bouton enCours={enCours} disabled={!choisi} onClick={valider}>
-          Valider le format
-        </Bouton>
-      }
-    >
-      <p className="modale__texte">
-        Choisissez le format qui correspond au colis. Le prix est recalculé, et un box qui accepte ce format vous est attribué,
-        avec un nouveau code.
-      </p>
-      <VueDonnees etat={formats}>
-        {(liste) => (
-          <div className="pile" style={{ gap: 8, marginTop: 14 }}>
-            {liste.map((format) => {
-              const actuel = format.code === colis.format?.code;
-              return (
-                <Option
-                  key={format.id}
-                  choisie={choisi?.id === format.id}
-                  desactivee={actuel}
-                  onClick={() => setChoisi(format)}
-                  style={{ padding: '10px 14px 10px 10px' }}
-                >
-                  <div className="rangee" style={{ gap: 14 }}>
-                    <VignetteFormat format={format} />
-                    <div className="extensible">
-                      <p className="titre" style={{ fontSize: 15.5 }}>
-                        {format.libelle}
-                      </p>
-                      <p className="texte-secondaire" style={{ fontSize: 12.5, marginTop: 2 }}>
-                        {actuel ? 'Format actuel' : poidsLisible(format.poidsMaxKg)}
-                      </p>
-                    </div>
-                    <span style={{ fontSize: 15, fontWeight: 700 }}>{prix(format.prix)}</span>
-                  </div>
-                </Option>
-              );
-            })}
-          </div>
-        )}
-      </VueDonnees>
-    </Modale>
   );
 }
 

@@ -148,7 +148,7 @@ export function ChoixDepot({ position, formats = [], choix, onChoisir, avecAutom
                 Laisser Tôligo choisir
               </p>
               <p className="texte-secondaire" style={{ fontSize: 12.5, marginTop: 2, lineHeight: 1.35 }}>
-                Le box libre le plus proche de votre adresse, dans la station la plus proche.
+                L’entrepôt le plus proche de votre adresse qui a de la place, dans la station la plus proche.
               </p>
             </div>
           </div>
