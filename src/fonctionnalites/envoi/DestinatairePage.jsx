@@ -179,7 +179,7 @@ function FormulaireDestinataire({ position, existant }) {
               SMS au destinataire
             </p>
             <p className="texte-secondaire" style={{ fontSize: 12.5 }}>
-              Lien de suivi et code de remise
+              Code de retrait et, s’il paie à la livraison, le montant à régler
             </p>
           </div>
         </div>
@@ -198,17 +198,16 @@ function FormulaireDestinataire({ position, existant }) {
   );
 }
 
-/** Bandeau coloré « (MT) Mariam Traoré · 1 colis · Moyen » (modification). */
+/** Bandeau coloré « (MT) Mariam Traoré · 07 01 02 03 04 » (modification). */
 function BandeauDestinataire({ destinataire, rang }) {
   const [fond, texte] = teinteDuRang(rang);
-  const formats = [...new Set(destinataire.colis.map((c) => c.format?.libelle).filter(Boolean))].join(', ');
   return (
     <div className="bandeau-destinataire" style={{ background: fond }}>
       <AvatarInitiales nom={destinataire.nom} taille={44} fond="var(--blanc)" couleur={texte} />
       <div>
         <p style={{ fontSize: 15, fontWeight: 700 }}>{destinataire.nom}</p>
         <p style={{ fontSize: 12.5, fontWeight: 600, color: texte }}>
-          {destinataire.colis.length} colis{formats ? ` · ${formats}` : ''}
+          {afficherTelephone(destinataire.telephone)}
         </p>
       </div>
     </div>

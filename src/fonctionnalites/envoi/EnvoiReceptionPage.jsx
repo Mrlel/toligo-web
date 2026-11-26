@@ -4,9 +4,9 @@ import { Store, Truck } from 'lucide-react';
 
 import { BarreEtapes, Bouton, Cascade, EncadreInfo, EnTete, IconeBox, Option, Page, PiedDAction, useMessages } from '../../composants';
 import { Routes } from '../../commun/routes';
-import { prenom, prix } from '../../utils/formatage';
+import { prenom } from '../../utils/formatage';
 import { MODES_RECEPTION, refusDuLieuDeDepot } from './api';
-import { etapesEnvoi, totalIndicatif, useEnvoi } from './EtatEnvoi';
+import { etapesEnvoi, useEnvoi } from './EtatEnvoi';
 import './envoi.css';
 
 const ICONES = {
@@ -20,9 +20,10 @@ const ICONES = {
  * colis, pour toute la commande.
  *
  * En continuant, le brouillon est créé (ou remplacé) sur le serveur, qui
- * choisit la station d'arrivée et calcule le supplément du mode : distance ×
- * prix au km à domicile, tarif de location en box. S'il refuse le mode (adresse
- * trop loin, tarif pas encore fixé), son message s'affiche ici.
+ * choisit la station d'arrivée et calcule l'estimation : grille des formats et
+ * supplément du mode (distance × prix au km à domicile, location en box). S'il
+ * refuse le mode (adresse trop loin, tarif pas encore fixé), son message
+ * s'affiche ici.
  */
 export default function EnvoiReceptionPage() {
   const naviguer = useNavigate();
@@ -40,8 +41,8 @@ export default function EnvoiReceptionPage() {
       naviguer(Routes.envoiRecap);
     } catch (erreur) {
       afficherErreur(erreur);
-      // §9.1 : un refus qui porte sur le lieu de dépôt (site sans box libre,
-      // station hors zone) se corrige à l'étape précédente.
+      // §9.1 : un refus qui porte sur le lieu de dépôt (station hors zone,
+      // site détaché) se corrige à l'étape précédente.
       if (refusDuLieuDeDepot(erreur)) naviguer(Routes.envoiDepot);
     } finally {
       setEnCours(false);
@@ -56,14 +57,9 @@ export default function EnvoiReceptionPage() {
         <PiedDAction
           arrondi
           entete={
-            <>
-              <span className="extensible texte-secondaire" style={{ fontSize: 13.5 }}>
-                Formats, hors supplément
-              </span>
-              <span className="titre" style={{ fontSize: 20 }}>
-                {prix(totalIndicatif(brouillon))}
-              </span>
-            </>
+            <span className="extensible texte-secondaire" style={{ fontSize: 13.5 }}>
+              {brouillon.nbColis} colis pour {prenom(destinataire.nom)}
+            </span>
           }
         >
           <Bouton enCours={enCours} onClick={continuer}>
@@ -103,7 +99,7 @@ export default function EnvoiReceptionPage() {
       </Cascade>
 
       <div style={{ marginTop: 14 }}>
-        <EncadreInfo>Le prix exact, supplément compris, s'affiche à l'étape suivante.</EncadreInfo>
+        <EncadreInfo>L’estimation, supplément compris, s’affiche à l’étape suivante. Le prix réel est fixé au dépôt.</EncadreInfo>
       </div>
     </Page>
   );

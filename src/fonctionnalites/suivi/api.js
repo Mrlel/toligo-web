@@ -10,10 +10,10 @@ import { versCommune } from '../adresses/api';
  */
 
 /**
- * Ce que le client doit faire pour que le colis avance : `paiement`,
- * `depot_entrepot` (apporter le colis à l'entrepôt et donner le code de la
- * commande au gestionnaire), `nouveau_code` (code expiré), `complement`
- * (supplément de prix après la pesée) ou `evaluation`.
+ * Ce que le client doit faire pour que le colis avance : `depot_entrepot`
+ * (apporter le colis à l'entrepôt et donner le code de dépôt au gestionnaire),
+ * `reactivation` (envoi expiré, aucun dépôt dans les 48 h) ou `evaluation`.
+ * Plus de paiement en ligne depuis le 26/11/2026.
  */
 function versAction(json) {
   if (!json || typeof json !== 'object') return null;
@@ -190,12 +190,6 @@ export async function signalerIncident(code, { type, description, photo }) {
   if (photo) formulaire.append('photo', photo);
   const json = lireObjet(await api.postFormulaire(`/client/colis/${encodeURIComponent(code)}/incidents`, formulaire));
   return json.reference ?? null;
-}
-
-/** Ouvre le paiement GeniusPay du complément de prix d'un colis. */
-export async function payerComplement(code) {
-  const json = lireObjet(await api.post(`/client/colis/${encodeURIComponent(code)}/paiement`));
-  return { checkoutUrl: json.checkout_url ?? '', montant: lireNombre(json.montant) };
 }
 
 /** Libellé court d'un statut de colis (CDC V3.3 §20), pour les pastilles. */

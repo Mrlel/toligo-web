@@ -19,7 +19,7 @@ import './paiement.css';
  *
  * ```js
  * const onglet = preparerOngletPaiement();      // dans le clic
- * const paiement = await payerCommande(id);     // appel au serveur
+ * const paiement = await payerLocation(id);     // appel au serveur
  * ouvrirPagePaiement(paiement.checkoutUrl, onglet);
  * ```
  */

@@ -1,14 +1,16 @@
 import { api } from '../../api/client';
 import { versFormatResume } from '../../commun/formats';
-import { lireBooleen, lireDate, lireListe, lireNombre, lireObjet } from '../../utils/lecture';
+import { lireDate, lireEntier, lireListe, lireNombre, lireObjet } from '../../utils/lecture';
 import { versCommune } from '../adresses/api';
 
 /**
- * Appels d'API du parcours de commande (workflow V3.3) :
- * brouillon -> devis -> confirmation -> paiement.
+ * Appels d'API du parcours de commande :
+ * brouillon -> devis indicatif -> confirmation (code de dépôt 48 h).
  *
- * Le destinataire et le mode de réception sont portés par la commande (un
- * seul destinataire par commande). Les stations sont choisies par Tôligo.
+ * Mise à jour du 26/11/2026 : plus de paiement en ligne. Le client annonce un
+ * nombre de colis ; le gestionnaire de l'entrepôt les pèse et les mesure, fixe
+ * le prix réel, et l'expéditeur l'accepte au comptoir. Il paie alors sur place
+ * (espèces ou Mobile Money), ou c'est le destinataire qui paie à la livraison.
  */
 
 /** Modes de réception proposés à l'expéditeur, pour toute la commande. */
@@ -34,6 +36,12 @@ export function libelleModeReception(code) {
   return MODES_RECEPTION.find((m) => m.code === code)?.libelle ?? '';
 }
 
+/** Modes de paiement : l'expéditeur au dépôt, ou le destinataire à la remise. */
+export const MODES_REGLEMENT = {
+  sur_place: 'Payé au dépôt',
+  a_la_livraison: 'Payé par le destinataire à la livraison',
+};
+
 /** Station résumée (nom, adresse, coordonnées). */
 function versStation(json) {
   if (!json || typeof json !== 'object') return null;
@@ -56,10 +64,8 @@ function versSite(json) {
     latitude: lireNombre(json.latitude),
     longitude: lireNombre(json.longitude),
     distanceKm: lireNombre(json.distance_km),
+    // Information seulement : un colis sans box libre attend à l'entrepôt.
     nbBoxLibres: lireNombre(json.nb_box_libres) ?? 0,
-    placesDisponibles: lireNombre(json.places_disponibles),
-    // Null sans `formats` : on ne sait alors rien de la capacité du site.
-    accueilleToutLaCommande: json.accueille_toute_la_commande ?? null,
   };
 }
 
@@ -80,45 +86,40 @@ export async function stationsDeDepot({ latitude, longitude }) {
   }));
 }
 
-/**
- * Sites de dépôt d'une station, du plus proche au plus lointain. `formats` :
- * un identifiant de format par colis ; sans eux, la capacité du site reste
- * inconnue (`accueilleToutLaCommande` nul).
- */
-export async function sitesDeDepot(stationId, { latitude, longitude }, formats = []) {
+/** Sites de dépôt d'une station, du plus proche au plus lointain. */
+export async function sitesDeDepot(stationId, { latitude, longitude }) {
   const chemin = `/client/stations/${encodeURIComponent(stationId)}/entrepots`;
-  return lireListe(await api.get(chemin, { latitude, longitude, formats })).map(versSite);
+  return lireListe(await api.get(chemin, { latitude, longitude })).map(versSite);
 }
 
 /**
  * Le refus du serveur porte-t-il sur le lieu de dépôt choisi ? Dans ce cas
- * l'écran de choix est le bon endroit pour le corriger : site devenu plein,
- * station qui ne dessert plus l'adresse, site détaché de sa station.
+ * l'écran de choix est le bon endroit pour le corriger : station qui ne
+ * dessert plus l'adresse, site détaché de sa station.
  */
 export function refusDuLieuDeDepot(erreur) {
   const champs = erreur?.erreurs ?? {};
   if (champs.entrepot_depot_id || champs.station_depart_id) return true;
-  return /site de dépôt|box libres|ne dessert pas votre adresse/i.test(erreur?.message ?? '');
+  return /site de dépôt|ne dessert pas votre adresse/i.test(erreur?.message ?? '');
 }
 
 /** Colis d'une commande, tel que l'API le renvoie. */
 function versColisCommande(json) {
-  const box = json.box && typeof json.box === 'object' ? json.box : null;
   return {
     id: json.id,
     codeSuivi: json.code_suivi ?? '',
     statut: json.statut ?? '',
     description: json.description ?? '',
+    // Nul tant que le colis n'a pas été pesé et mesuré à l'entrepôt.
     format: versFormatResume(json.format),
     prix: lireNombre(json.prix) ?? 0,
-    // Photo exigée avant la confirmation (§11.2).
-    aUnePhoto: lireBooleen(json.a_une_photo),
-    // Box de réception réservé : c'est le gestionnaire de l'entrepôt qui y
-    // range le colis, le client n'a pas de code de box.
-    box: box && { numero: box.numero ?? '', adresse: box.adresse ?? null },
-    // Réception à l'entrepôt (rangement dans le box).
-    deposeLe: lireDate(json.depose_le),
   };
+}
+
+/** Estimation { min, max } tant que le prix réel n'est pas fixé, sinon null. */
+function versEstimation(json) {
+  if (!json || typeof json !== 'object') return null;
+  return { min: lireNombre(json.min) ?? 0, max: lireNombre(json.max) ?? 0 };
 }
 
 /** Commande de livraison (brouillon, puis confirmée). */
@@ -128,28 +129,36 @@ export function versCommande(json) {
   const livraison = lireObjet(json.livraison);
   const mode = json.mode_reception && typeof json.mode_reception === 'object' ? json.mode_reception : null;
   const paiement = json.paiement && typeof json.paiement === 'object' ? json.paiement : null;
-  const commande = {
+  return {
     id: json.id,
     reference: json.reference ?? '',
     statut: json.statut ?? '',
     montantBase: lireNombre(json.montant_base) ?? 0,
     montantSupplement: lireNombre(json.montant_supplement) ?? 0,
     montantTotal: lireNombre(json.montant_total) ?? 0,
-    montantDefinitif: lireBooleen(json.montant_definitif),
+    // Vrai une fois le prix accepté au comptoir de l'entrepôt.
+    montantDefinitif: json.montant_definitif === true,
+    estimation: versEstimation(json.estimation),
+    nbColisDeclares: lireEntier(json.nb_colis_declares),
+    // `sur_place` ou `a_la_livraison`.
     modeReglement: json.mode_reglement ?? null,
+    // `en_attente` (avant le dépôt), `paye` ou `a_payer_livraison`.
+    statutPaiement: json.statut_paiement ?? null,
     modeReception: mode?.code ?? null,
     stationDepart: versStation(json.station_depart),
     stationArrivee: versStation(json.station_arrivee),
-    // Site ou l'expediteur depose ses colis : celui qu'il a choisi, ou celui
-    // sur lequel le serveur a replie la commande (§9.1).
+    // Entrepôt où l'expéditeur apporte ses colis : celui qu'il a choisi, ou
+    // celui que Tôligo a retenu à la confirmation.
     siteDepot: versSite(json.site_depot),
-    // Code de réception de la commande : le client le donne au gestionnaire
-    // du site de dépôt, avec ses colis. Null avant le paiement (ou tant que
-    // les box ne sont pas tous réservés), après la réception, ou expiré.
+    // Code de dépôt de la commande, valable 48 h : le client le donne au
+    // gestionnaire de l'entrepôt avec ses colis. Null avant la confirmation,
+    // après le dépôt, ou une fois expiré.
     codeReception:
       json.code_reception && typeof json.code_reception === 'object'
         ? { code: json.code_reception.code ?? '', expireLe: lireDate(json.code_reception.expire_le) }
         : null,
+    // Envoi expiré : aucun dépôt dans les 48 h, il peut être réactivé.
+    expireeLe: lireDate(json.expiree_le),
     recueLe: lireDate(json.recue_le),
     // Adresse de l'expediteur (colonnes `collecte_*` cote serveur).
     expediteurAdresse: collecte.adresse ?? null,
@@ -160,28 +169,51 @@ export function versCommande(json) {
     livraisonAdresse: livraison.adresse ?? '',
     livraisonCommune: versCommune(livraison.commune)?.nom ?? null,
     colis: lireListe(json.colis).map(versColisCommande),
+    // Paiement enregistré au comptoir ou à la livraison : `especes` ou `mobile_money`.
     paiement: paiement && {
       statut: paiement.statut ?? '',
       montant: lireNombre(paiement.montant) ?? 0,
       moyen: paiement.moyen ?? null,
       payeLe: lireDate(paiement.paye_le),
     },
-    payeeLe: lireDate(json.payee_le),
   };
-  commande.estPayee = commande.statut === 'payee' || commande.payeeLe !== null;
-  return commande;
 }
 
-/** Devis calculé par le serveur : station B, prix de base, supplément. */
+/** Une ligne de la grille indicative : un format et le prix d'un colis de ce format. */
+function versLigneGrille(json) {
+  const dimensions = lireObjet(json.dimensions_max_cm);
+  return {
+    id: json.format_id ?? json.id,
+    code: json.code ?? '',
+    libelle: json.libelle ?? '',
+    icone: json.icone ?? null,
+    poidsMaxKg: lireNombre(json.poids_max_kg),
+    dimensions: {
+      longueur: lireNombre(dimensions.longueur),
+      largeur: lireNombre(dimensions.largeur),
+      hauteur: lireNombre(dimensions.hauteur),
+    },
+    // Prix du format, plus la location du box de stockage s'il y a lieu.
+    prixColis: lireNombre(json.prix_colis) ?? 0,
+  };
+}
+
+/**
+ * Devis indicatif calculé par le serveur : station B, grille des formats,
+ * supplément du mode de réception et fourchette pour le nombre de colis.
+ */
 function versDevis(json) {
   const supplement = lireObjet(json.supplement);
   return {
     modeReception: json.mode_reception ?? null,
     stationArrivee: versStation(json.station_arrivee),
-    montantBase: lireNombre(json.montant_base) ?? 0,
-    montantSupplement: lireNombre(json.montant_supplement) ?? 0,
-    montantTotal: lireNombre(json.montant_total) ?? 0,
+    nbColis: lireEntier(json.nb_colis) ?? 0,
+    grille: lireListe(json.grille).map(versLigneGrille),
+    // Supplément pour toute la commande (livraison à domicile) ; la location
+    // du box de stockage est comprise dans le prix de chaque colis.
+    montantSupplement: lireNombre(supplement.montant) ?? 0,
     distanceKm: lireNombre(supplement.distance_km),
+    estimation: versEstimation(json.estimation) ?? { min: 0, max: 0 },
   };
 }
 
@@ -199,54 +231,20 @@ export async function detailCommande(id) {
 }
 
 /**
- * Nouveau code de réception, après expiration du précédent : les box sont de
- * nouveau réservés (même site si possible). Un code encore valable est
- * simplement renvoyé. Refus (422) si aucun box n'est libre pour le moment.
+ * Réactive un envoi expiré (aucun dépôt dans les 48 h) : un nouveau code de
+ * dépôt est émis, valable 48 h.
  */
-export async function demanderNouveauCodeReception(id) {
-  return versCommande(lireObjet(await api.post(`/client/commandes/${id}/code-reception`)));
+export async function reactiverCommande(id) {
+  return versCommande(lireObjet(await api.post(`/client/commandes/${id}/reactivation`)));
 }
 
 export async function devisCommande(id) {
   return versDevis(lireObjet(await api.get(`/client/commandes/${id}/simulation`)));
 }
 
-/**
- * Envoie la photo d'un colis du brouillon (multipart, champ « photo »). Une
- * nouvelle photo remplace la précédente, jusqu'à la confirmation.
- */
-export function envoyerPhotoColis(codeSuivi, photo) {
-  const formulaire = new FormData();
-  formulaire.append('photo', photo);
-  return api.postFormulaire(`/client/colis/${encodeURIComponent(codeSuivi)}/photo`, formulaire);
-}
-
-/** Adresse de la photo d'un colis, à afficher avec ImageProtegee. */
-export function adressePhotoColis(codeSuivi) {
-  return `/client/colis/${encodeURIComponent(codeSuivi)}/photo`;
-}
-
-/** Confirme la commande : le serveur choisit les stations et fige le prix. */
+/** Confirme l'envoi avec le mode de paiement ; le serveur émet le code de dépôt. */
 export async function confirmerCommande(id, { modeReglement }) {
   return versCommande(lireObjet(await api.post(`/client/commandes/${id}/confirmation`, { mode_reglement: modeReglement })));
-}
-
-/** Paiement GeniusPay initié : adresse de la page de paiement et références. */
-export function versPaiementInitie(json) {
-  return {
-    checkoutUrl: json.checkout_url ?? '',
-    paiementId: json.paiement_id ?? null,
-    reference: json.reference ?? null,
-    // Référence GeniusPay : sert à vérifier le paiement auprès du serveur.
-    referenceFournisseur: json.reference_fournisseur ?? null,
-    montant: lireNombre(json.montant),
-    urlRetour: json.url_retour ?? null,
-  };
-}
-
-/** Ouvre un paiement GeniusPay pour une commande confirmée. */
-export async function payerCommande(id) {
-  return versPaiementInitie(lireObjet(await api.post(`/client/commandes/${id}/paiement`)));
 }
 
 /** Destinataires déjà servis par le client (puces « Récents »). */

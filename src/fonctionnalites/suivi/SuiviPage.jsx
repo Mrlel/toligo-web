@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Marker } from 'react-leaflet';
 import { BellRing, Camera, Check, CreditCard, Share2, TriangleAlert } from 'lucide-react';
@@ -19,10 +19,9 @@ import { Routes } from '../../commun/routes';
 import { distance, heure, moment, prenom, prix } from '../../utils/formatage';
 import { lireDate } from '../../utils/lecture';
 import { useDonnees } from '../../utils/useDonnees';
-import { demanderNouveauCodeReception, libelleModeReception, payerCommande } from '../envoi/api';
+import { libelleModeReception, reactiverCommande } from '../envoi/api';
 import { CodeReception } from '../envoi/CodeReception';
-import { AttentePaiement, fermerOnglet, ouvrirPagePaiement, preparerOngletPaiement } from '../paiement/paiement';
-import { detailColis, libelleStatutColis, payerComplement, positionColis } from './api';
+import { detailColis, libelleStatutColis, positionColis } from './api';
 import './suivi.css';
 
 /** Toutes les 20 secondes : l'hébergement actuel ne permet pas le temps réel (WebSocket). */
@@ -192,66 +191,25 @@ function CarteSuivi({ colis, position }) {
 
 /**
  * Ce que le client doit faire : apporter ses colis à l'entrepôt et donner le
- * code de la commande au gestionnaire, demander un nouveau code après
- * expiration, payer la commande ou un complément de prix (audit §24).
+ * code de dépôt au gestionnaire, ou réactiver un envoi expiré (aucun dépôt
+ * dans les 48 h). Plus de paiement en ligne depuis le 26/11/2026.
  */
 function ActionRequise({ colis, onActualiser }) {
   const { afficherMessage, afficherErreur } = useMessages();
   const [enCours, setEnCours] = useState(false);
-  // Vrai une fois la page GeniusPay (commande ou complément) ouverte.
-  const [attentePaiement, setAttentePaiement] = useState(false);
-  const code = colis.codeSuivi;
-  const typeAction = colis.action?.type;
-
-  /** Le paiement est confirmé dès que le suivi ne le demande plus. */
-  const paiementConfirme = useCallback(async () => {
-    try {
-      return (await detailColis(code)).action?.type !== typeAction;
-    } catch {
-      return false;
-    }
-  }, [code, typeAction]);
-
-  const surPaiementConfirme = useCallback(() => {
-    setAttentePaiement(false);
-    afficherMessage(typeAction === 'complement' ? 'Complément payé. Merci !' : 'Paiement reçu. Merci !');
-    onActualiser();
-  }, [afficherMessage, onActualiser, typeAction]);
 
   const action = colis.action;
   if (!action) return null;
 
-  /** Code expiré : les box sont de nouveau réservés, puis un code est émis. */
-  async function nouveauCode() {
+  async function reactiver() {
     setEnCours(true);
     try {
-      const commande = await demanderNouveauCodeReception(action.commandeId);
+      const commande = await reactiverCommande(action.commandeId);
       afficherMessage(
-        commande.codeReception
-          ? `Nouveau code de dépôt : ${commande.codeReception.code}.`
-          : 'Demande enregistrée : vous serez prévenu dès que votre code est prêt.',
+        commande.codeReception ? `Envoi réactivé : nouveau code de dépôt ${commande.codeReception.code}.` : 'Envoi réactivé.',
       );
       onActualiser();
     } catch (erreur) {
-      afficherErreur(erreur);
-    } finally {
-      setEnCours(false);
-    }
-  }
-
-  async function payer() {
-    // L'onglet de paiement s'ouvre dans le clic, sinon le navigateur le bloque.
-    const onglet = preparerOngletPaiement();
-    setEnCours(true);
-    try {
-      // Commande non payée ou complément de format : même page GeniusPay.
-      const paiement = action.type === 'complement' ? await payerComplement(code) : await payerCommande(action.commandeId);
-      if (!ouvrirPagePaiement(paiement.checkoutUrl, onglet)) {
-        afficherMessage("Impossible d'ouvrir la page de paiement. Autorisez les fenêtres pop-up pour ce site.");
-      }
-      setAttentePaiement(true);
-    } catch (erreur) {
-      fermerOnglet(onglet);
       afficherErreur(erreur);
     } finally {
       setEnCours(false);
@@ -266,54 +224,21 @@ function ActionRequise({ colis, onActualiser }) {
     );
   }
 
-  if (action.type === 'nouveau_code' && action.commandeId) {
+  if (action.type === 'reactivation' && action.commandeId) {
     return (
       <div className="pile" style={{ gap: 8, marginBottom: 16 }}>
         <EncadreInfo accent icone={BellRing}>
-          Votre code de dépôt a expiré avant que vos colis soient déposés à l'entrepôt. Demandez-en un nouveau : la place de vos
-          colis est de nouveau réservée.
+          Envoi expiré : vos colis n’ont pas été déposés dans les 48 h. Réactivez-le pour obtenir un nouveau code de dépôt,
+          valable 48 h.
         </EncadreInfo>
-        <Bouton variante="accent" enCours={enCours} onClick={nouveauCode}>
-          Obtenir un nouveau code
+        <Bouton variante="accent" enCours={enCours} onClick={reactiver}>
+          Réactiver l’envoi
         </Bouton>
       </div>
     );
   }
 
-  if (action.type === 'complement') {
-    const montant = prix(action.montant ?? 0);
-    return (
-      <div className="pile" style={{ gap: 8, marginBottom: 16 }}>
-        <EncadreInfo accent icone={CreditCard}>
-          Le format du colis a changé : un complément de <strong>{montant}</strong> reste à payer.
-        </EncadreInfo>
-        {attentePaiement ? (
-          <AttentePaiement estPaye={paiementConfirme} onPaye={surPaiementConfirme} onRelancer={payer} />
-        ) : (
-          <Bouton variante="accent" enCours={enCours} onClick={payer}>
-            Payer {montant}
-          </Bouton>
-        )}
-      </div>
-    );
-  }
-
-  if (action.type !== 'paiement' || !action.commandeId) return null;
-
-  return (
-    <div className="pile" style={{ gap: 8, marginBottom: 16 }}>
-      <EncadreInfo accent icone={BellRing}>
-        Paiement en attente : votre code de dépôt vous est remis dès qu'il est confirmé.
-      </EncadreInfo>
-      {attentePaiement ? (
-        <AttentePaiement estPaye={paiementConfirme} onPaye={surPaiementConfirme} onRelancer={payer} />
-      ) : (
-        <Bouton variante="accent" enCours={enCours} onClick={payer}>
-          Payer maintenant
-        </Bouton>
-      )}
-    </div>
-  );
+  return null;
 }
 
 /** Frise verticale des jalons. */
@@ -373,21 +298,27 @@ function Frise({ colis }) {
   );
 }
 
-/** Bloc « Payé en ligne · Orange Money · aujourd'hui à 12:58 ». */
+/** Moyen de paiement enregistré, en clair. */
+const MOYENS = { especes: 'espèces', mobile_money: 'Mobile Money' };
+
+/**
+ * Bloc paiement (26/11/2026) : à payer au dépôt tant que le prix n'est pas
+ * fixé, payé au dépôt, ou payé par le destinataire à la livraison.
+ */
 function BlocPaiement({ colis }) {
-  const { statut } = colis.paiement;
+  const { statut, moyen } = colis.paiement;
   const payeLe = lireDate(colis.paiement.paye_le);
-  let titre = 'Paiement en attente';
-  let detail = 'Mobile money';
-  if (statut === 'paye' && colis.modeReglement === 'a_la_livraison') {
-    titre = 'Payé à la livraison';
-    detail = moment(payeLe);
-  } else if (statut === 'paye') {
-    titre = 'Payé en ligne';
-    detail = moment(payeLe);
-  } else if (statut === 'a_la_livraison') {
+  const aLaLivraison = colis.modeReglement === 'a_la_livraison';
+  const prixFixe = colis.prix > 0;
+  let titre = aLaLivraison ? 'Paiement à la livraison' : 'À payer au dépôt';
+  let detail = aLaLivraison ? 'Le destinataire paie à la remise du colis' : 'Prix fixé au comptoir de l’entrepôt';
+
+  if (statut === 'paye') {
+    titre = aLaLivraison ? 'Payé à la livraison' : 'Payé au dépôt';
+    detail = [MOYENS[moyen] ?? null, moment(payeLe)].filter(Boolean).join(' · ');
+  } else if (statut === 'a_payer_livraison' || statut === 'a_la_livraison') {
     titre = 'Paiement à la livraison';
-    detail = 'Le destinataire règle avant la remise';
+    detail = 'Le destinataire paie à la remise du colis';
   }
 
   return (
@@ -405,9 +336,11 @@ function BlocPaiement({ colis }) {
           </p>
         )}
       </div>
-      <span className="titre" style={{ fontSize: 16 }}>
-        {prix(colis.prix)}
-      </span>
+      {prixFixe && (
+        <span className="titre" style={{ fontSize: 16 }}>
+          {prix(colis.prix)}
+        </span>
+      )}
     </div>
   );
 }

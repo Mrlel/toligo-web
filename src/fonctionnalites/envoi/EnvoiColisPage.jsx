@@ -1,61 +1,33 @@
-import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Check } from 'lucide-react';
+import { Minus, Plus, Scale } from 'lucide-react';
 
-import {
-  AvatarInitiales,
-  BarreEtapes,
-  Bouton,
-  BoutonAjout,
-  Cascade,
-  EncadreInfo,
-  EnTete,
-  Option,
-  Page,
-  PetitBouton,
-  PiedDAction,
-  useMessages,
-  VueDonnees,
-} from '../../composants';
-import { listerFormats, poidsLisible } from '../../commun/formats';
+import { BarreEtapes, Bouton, Cascade, EncadreInfo, EnTete, Page, PiedDAction, VueDonnees } from '../../composants';
+import { dimensionsLisibles, listerFormats, poidsLisible } from '../../commun/formats';
 import { Routes } from '../../commun/routes';
-import { prenom, prix } from '../../utils/formatage';
+import { prenom } from '../../utils/formatage';
 import { useDonnees } from '../../utils/useDonnees';
-import { CarteFragile, ChampDescriptionColis, VignetteFormat } from './ColisCommun';
-import { colisComplets, colisEstComplet, etapesEnvoi, totalIndicatif, tousLesColis, useEnvoi } from './EtatEnvoi';
+import { CarteTarif, fourchetteLisible } from './ColisCommun';
+import { etapesEnvoi, fourchetteDesFormats, NB_MAX_COLIS, useEnvoi } from './EtatEnvoi';
 import './envoi.css';
 
 /**
- * Maquette A-Envoi-Colis (étape 2) : pour chaque colis du destinataire, le
- * format, le contenu et la fragilité.
+ * Étape « Colis » (mise à jour du 26/11/2026) : le client annonce seulement le
+ * nombre de colis. Il ne choisit plus de format.
  *
- * Écart voulu : la description du contenu est demandée pour chaque colis
- * (l'API l'exige), y compris le premier. Les onglets ne servent plus qu'aux
- * brouillons de l'ancien parcours (V3.3 : un seul destinataire).
+ * Au dépôt, le gestionnaire de l'entrepôt pèse et mesure chaque colis : le
+ * format et le prix réel en découlent. La grille affichée ici n'est qu'une
+ * indication, pour que le client sache à quoi s'attendre.
  */
 export default function EnvoiColisPage() {
   const naviguer = useNavigate();
-  const { afficherMessage } = useMessages();
-  const { brouillon, modifierColis, retirerColis } = useEnvoi();
+  const { brouillon, definirNbColis } = useEnvoi();
   const formats = useDonnees(listerFormats, []);
-  const [onglet, setOnglet] = useState(0);
 
-  const { destinataires } = brouillon;
-  if (destinataires.length === 0 || !brouillon.collecte) return <Navigate to={Routes.envoi} replace />;
+  const destinataire = brouillon.destinataires[0];
+  if (!destinataire || !brouillon.collecte) return <Navigate to={Routes.envoi} replace />;
 
-  const indexCourant = Math.min(onglet, destinataires.length - 1);
-  const destinataire = destinataires[indexCourant];
-  const nbColis = tousLesColis(brouillon).length;
-
-  function continuer() {
-    if (!colisComplets(brouillon)) {
-      afficherMessage('Choisissez un format et décrivez le contenu de chaque colis.');
-      return;
-    }
-    // Les formats sont connus : l'étape suivante peut proposer les sites de
-    // dépôt capables d'accueillir tous les colis (§9.1).
-    naviguer(Routes.envoiDepot);
-  }
+  const { nbColis } = brouillon;
+  const fourchette = fourchetteDesFormats(formats.donnees, nbColis);
 
   return (
     <Page
@@ -67,106 +39,83 @@ export default function EnvoiColisPage() {
           entete={
             <>
               <span className="extensible texte-secondaire" style={{ fontSize: 13.5 }}>
-                {nbColis} colis · pour {prenom(destinataire.nom)}
+                {nbColis} colis · estimation
               </span>
-              <span className="titre" style={{ fontSize: 20 }}>
-                {prix(totalIndicatif(brouillon))}
+              <span className="titre" style={{ fontSize: 18 }}>
+                {fourchette ? fourchetteLisible(fourchette) : '—'}
               </span>
             </>
           }
         >
-          <Bouton onClick={continuer}>
-            Continuer
-          </Bouton>
+          <Bouton onClick={() => naviguer(Routes.envoiDepot)}>Continuer</Bouton>
         </PiedDAction>
       }
     >
       <BarreEtapes etapes={etapesEnvoi(brouillon)} courante={1} />
+      <h2 className="envoi__question" style={{ marginTop: 12 }}>
+        Combien de colis envoyez-vous ?
+      </h2>
+      <p className="envoi__sous-titre">Pour {prenom(destinataire.nom)} · pas besoin de les peser, c’est fait au dépôt</p>
 
+      <div className="compteur-colis" style={{ marginTop: 16 }}>
+        <button
+          type="button"
+          className="compteur-colis__bouton"
+          onClick={() => definirNbColis(nbColis - 1)}
+          disabled={nbColis <= 1}
+          aria-label="Un colis de moins"
+        >
+          <Minus size={22} />
+        </button>
+        <label className="compteur-colis__centre">
+          <input
+            className="compteur-colis__valeur"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={NB_MAX_COLIS}
+            value={nbColis}
+            onChange={(e) => definirNbColis(Number(e.target.value))}
+            aria-label="Nombre de colis"
+          />
+          <span className="compteur-colis__unite">colis</span>
+        </label>
+        <button
+          type="button"
+          className="compteur-colis__bouton"
+          onClick={() => definirNbColis(nbColis + 1)}
+          disabled={nbColis >= NB_MAX_COLIS}
+          aria-label="Un colis de plus"
+        >
+          <Plus size={22} />
+        </button>
+      </div>
+
+      <p className="etiquette-section" style={{ margin: '22px 0 10px', fontSize: 13, letterSpacing: 0.6 }}>
+        Tarifs indicatifs par colis
+      </p>
       <VueDonnees etat={formats}>
-        {(listeFormats) => (
-          <div style={{ marginTop: 14 }}>
-            {destinataires.length > 1 && (
-              <div className="onglets-destinataires" role="tablist" style={{ marginBottom: 14 }}>
-                {destinataires.map((d, i) => {
-                  // Un destinataire dont tous les colis sont décrits porte une coche.
-                  const complet = i !== indexCourant && d.colis.every(colisEstComplet);
-                  return (
-                    <button key={d.cle} type="button" role="tab" aria-selected={i === indexCourant} onClick={() => setOnglet(i)}>
-                      {complet ? (
-                        <span className="coche-complet">
-                          <Check size={14} />
-                        </span>
-                      ) : (
-                        <AvatarInitiales nom={d.nom} rang={i} taille={22} />
-                      )}
-                      <span className="une-ligne">
-                        {prenom(d.nom)} · {d.colis.length} colis
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {destinataire.colis.map((colis, c) => (
-              <section className="saisie-colis" key={colis.cle}>
-                <div className="rangee" style={{ gap: 12 }}>
-                  <div className="extensible">
-                    <h2 style={{ fontSize: 19 }}>{c === 0 ? 'Quelle taille fait le colis ?' : `Et le colis ${c + 1} ?`}</h2>
-                    <p className="envoi__sous-titre">
-                      Colis {c + 1} · pour {destinataire.nom}
-                    </p>
-                  </div>
-                  {destinataire.colis.length > 1 && <PetitBouton onClick={() => retirerColis(indexCourant, c)}>Retirer</PetitBouton>}
-                </div>
-
-                <Cascade className="choix-grille" style={{ marginTop: 14 }}>
-                  {listeFormats.map((format) => (
-                    <Option
-                      key={format.id}
-                      choisie={colis.format?.id === format.id}
-                      onClick={() => modifierColis(indexCourant, c, { format })}
-                    >
-                      <div className="choix-carte">
-                        <VignetteFormat format={format} />
-                        <div>
-                          <p className="titre" style={{ fontSize: 15.5 }}>
-                            {format.libelle}
-                          </p>
-                          <p className="texte-secondaire" style={{ fontSize: 12.5, marginTop: 2 }}>
-                            {format.description ? `${format.description} · ` : ''}
-                            {poidsLisible(format.poidsMaxKg)}
-                          </p>
-                        </div>
-                        <span className="choix-carte__prix">{prix(format.prix)}</span>
-                      </div>
-                    </Option>
-                  ))}
-                </Cascade>
-
-                <div style={{ marginTop: 14 }}>
-                  <ChampDescriptionColis valeur={colis.description} onChange={(description) => modifierColis(indexCourant, c, { description })} />
-                </div>
-                <div style={{ marginTop: 14 }}>
-                  <CarteFragile valeur={colis.fragile} onChange={(fragile) => modifierColis(indexCourant, c, { fragile })} />
-                </div>
-              </section>
+        {(liste) => (
+          <Cascade className="grille-tarifs">
+            {liste.map((format) => (
+              <CarteTarif
+                key={format.id}
+                format={format}
+                poids={poidsLisible(format.poidsMaxKg)}
+                dimensions={dimensionsLisibles(format.dimensions)}
+                montant={format.prix}
+              />
             ))}
-
-            <div style={{ marginTop: 18 }}>
-              <BoutonAjout hauteur={48} onClick={() => naviguer(Routes.envoiColisAjout(indexCourant))}>
-                Ajouter un colis pour {prenom(destinataire.nom)}
-              </BoutonAjout>
-            </div>
-            <div style={{ marginTop: 14 }}>
-              <EncadreInfo>
-                Votre colis est pesé et mesuré à la station de départ : si son format change, le prix est ajusté.
-              </EncadreInfo>
-            </div>
-          </div>
+          </Cascade>
         )}
       </VueDonnees>
+
+      <div style={{ marginTop: 14 }}>
+        <EncadreInfo icone={Scale}>
+          Au dépôt, le gestionnaire pèse et mesure chaque colis devant vous : le format et le prix réel en découlent. Vous
+          acceptez ce prix avec un code reçu par SMS. S’il ne vous convient pas, l’envoi est annulé sans frais.
+        </EncadreInfo>
+      </div>
     </Page>
   );
 }

@@ -6,43 +6,51 @@ import { confirmerCommande, creerCommande, devisCommande, remplacerCommande } fr
  * Tout ce que le client saisit dans le parcours « Nouvel envoi », partagé par
  * ses écrans (comme etat_envoi.dart).
  *
- * Workflow V3.3 : un seul destinataire par commande, un mode de réception
- * pour toute la commande, et des stations choisies par Tôligo. Le brouillon
- * n'est créé sur le serveur qu'en quittant l'étape « Réception », car le mode
- * de réception fait partie de la commande. En attendant, la saisie est gardée
- * dans l'onglet du navigateur (sessionStorage) : elle survit à un
+ * Mise à jour du 26/11/2026 : le client n'indique plus que le NOMBRE de colis.
+ * Le gestionnaire de l'entrepôt les pèse et les mesure au comptoir : c'est là
+ * que le format et le prix réel sont fixés, et l'expéditeur les accepte par un
+ * code reçu par SMS. Dans l'application, le prix n'est qu'une estimation tirée
+ * de la grille des formats.
+ *
+ * Le brouillon n'est créé sur le serveur qu'en quittant l'étape « Réception »,
+ * car le mode de réception fait partie de la commande. En attendant, la saisie
+ * est gardée dans l'onglet du navigateur (sessionStorage) : elle survit à un
  * rechargement de la page.
  *
  * Forme du brouillon :
  * - collecte : adresse de l'expéditeur, prise dans le carnet (voir adresses/api.js) ;
- * - destinataires : [{ cle, nom, telephone, lieu, adresse, repere, colis: [...] }],
- *   un seul élément au plus ; chaque colis : { cle, format, description, fragile } ;
+ * - destinataires : [{ cle, nom, telephone, lieu, adresse, repere }], un seul au plus ;
+ * - nbColis : nombre de colis annoncé (1 à NB_MAX_COLIS) ;
  * - instructions : consignes pour la livraison au destinataire ;
+ * - depot : lieu de dépôt choisi { station, site }, ou null (Tôligo choisit) ;
  * - modeReception : `retrait_station`, `livraison_domicile` ou `box_stockage` ;
- * - commande : brouillon créé sur le serveur (null avant l'étape 3) ;
- * - envoye : dernière saisie envoyée au serveur (texte JSON), pour ne pas
- *   recréer les colis — et perdre leurs photos — quand rien n'a changé ;
- * - devis : station B et prix calculés par le serveur ;
- * - modeReglement : `en_ligne` ou `a_la_livraison`.
+ * - commande : brouillon créé sur le serveur (null avant l'étape « Réception ») ;
+ * - envoye : dernière saisie envoyée au serveur (texte JSON), pour ne pas la
+ *   renvoyer quand rien n'a changé ;
+ * - devis : grille indicative et estimation calculées par le serveur ;
+ * - modeReglement : `sur_place` (l'expéditeur paie au dépôt) ou
+ *   `a_la_livraison` (le destinataire paie à la remise).
  */
 const ContexteEnvoi = createContext(null);
 
-// Clé propre au workflow V3.3 : un brouillon de l'ancien parcours (plusieurs
-// destinataires, choix de station) n'est pas repris.
-const CLE_STOCKAGE = 'toligo_envoi_v33';
+// Clé propre au parcours du 26/11/2026 : un brouillon de l'ancien parcours
+// (formats choisis par le client, paiement en ligne) n'est pas repris.
+const CLE_STOCKAGE = 'toligo_envoi_v34';
+
+/** Garde-fou du serveur : au-delà, une commande relève de l'import par fichier. */
+export const NB_MAX_COLIS = 50;
 
 const BROUILLON_VIDE = {
   collecte: null,
   instructions: '',
   destinataires: [],
-  // Lieu de dépôt choisi par l'expéditeur (§9.1) : { station, site }. Nul =
-  // Tôligo choisit, comportement d'origine.
+  nbColis: 1,
   depot: null,
   modeReception: 'retrait_station',
   commande: null,
   envoye: null,
   devis: null,
-  modeReglement: 'en_ligne',
+  modeReglement: 'sur_place',
   prochaineCle: 1,
 };
 
@@ -57,25 +65,17 @@ function lireBrouillon() {
 
 // --- Lectures utiles aux écrans ---
 
-export function tousLesColis(brouillon) {
-  return brouillon.destinataires.flatMap((d) => d.colis);
-}
-
-export function colisEstComplet(colis) {
-  return Boolean(colis.format) && colis.description.trim() !== '';
-}
-
-export function colisComplets(brouillon) {
-  const colis = tousLesColis(brouillon);
-  return colis.length > 0 && colis.every(colisEstComplet);
-}
-
 /**
- * Total indicatif des formats, avant le devis. Le serveur recalcule toujours
- * le montant définitif.
+ * Fourchette indicative avant le devis du serveur : tous les colis au plus
+ * petit format, ou tous au plus grand. Hors supplément du mode de réception.
+ *
+ * @param {Array<{prix: number}>} formats Formats actifs.
+ * @returns {{min: number, max: number} | null}
  */
-export function totalIndicatif(brouillon) {
-  return tousLesColis(brouillon).reduce((total, c) => total + (c.format?.prix ?? 0), 0);
+export function fourchetteDesFormats(formats, nbColis) {
+  const prixListe = (formats ?? []).map((f) => f.prix).filter((p) => p > 0);
+  if (prixListe.length === 0) return null;
+  return { min: nbColis * Math.min(...prixListe), max: nbColis * Math.max(...prixListe) };
 }
 
 /** Rang d'un destinataire dans l'envoi (0, 1...) : il fixe la couleur de son avatar. */
@@ -86,17 +86,17 @@ export function rangDestinataire(brouillon, nom) {
 
 /** Étapes affichées en haut du parcours. */
 export function etapesEnvoi() {
-  return ['Adresses', 'Colis', 'Dépôt', 'Réception', 'Paiement'];
+  return ['Adresses', 'Colis', 'Dépôt', 'Réception', 'Confirmation'];
 }
 
-/** Corps de POST /client/commandes : destinataire et mode portés par la commande. */
+/** Corps de POST /client/commandes : destinataire, mode et nombre de colis. */
 function versApi(brouillon) {
   const destinataire = brouillon.destinataires[0];
   return {
     source: 'application',
     adresse_collecte_id: brouillon.collecte.id,
     // §9.1 : les deux vont ensemble, et sont omis quand l'expéditeur laisse
-    // Tôligo choisir son box.
+    // Tôligo choisir son entrepôt.
     station_depart_id: brouillon.depot?.station?.id ?? null,
     entrepot_depot_id: brouillon.depot?.site?.id ?? null,
     mode_reception: brouillon.modeReception,
@@ -107,11 +107,7 @@ function versApi(brouillon) {
     livraison_latitude: destinataire.lieu.latitude,
     livraison_longitude: destinataire.lieu.longitude,
     livraison_instructions: brouillon.instructions.trim() || null,
-    colis: destinataire.colis.map((colis) => ({
-      description: colis.description.trim(),
-      format_colis_id: colis.format.id,
-      est_fragile: colis.fragile,
-    })),
+    nb_colis: brouillon.nbColis,
   };
 }
 
@@ -132,17 +128,6 @@ export function FournisseurEnvoi({ children }) {
 
   const modifier = useCallback((changements) => setBrouillon((b) => ({ ...b, ...changements })), []);
 
-  /**
-   * Remplace la liste des destinataires à partir de la précédente. Le lieu de
-   * dépôt est oublié : un site validé pour un colis « petit » peut ne plus
-   * convenir après ajout d'un colis, et le serveur refuserait la commande à la
-   * toute fin du parcours (§9.1).
-   */
-  const modifierDestinataires = useCallback(
-    (transformer) => setBrouillon((b) => ({ ...b, depot: null, destinataires: transformer(b.destinataires) })),
-    [],
-  );
-
   const actions = {
     reinitialiser: () => setBrouillon(BROUILLON_VIDE),
 
@@ -155,61 +140,28 @@ export function FournisseurEnvoi({ children }) {
 
     definirInstructions: (texte) => modifier({ instructions: texte }),
 
-    /** Définit le destinataire, avec un premier colis à décrire. */
+    /** Nombre de colis annoncé, borné entre 1 et NB_MAX_COLIS. */
+    definirNbColis: (nombre) => modifier({ nbColis: Math.min(NB_MAX_COLIS, Math.max(1, Math.round(nombre) || 1)) }),
+
+    /** Définit le destinataire (un seul par commande). */
     ajouterDestinataire: ({ nom, telephone, lieu, adresse, repere }) =>
       setBrouillon((b) => ({
         ...b,
-        depot: null,
-        prochaineCle: b.prochaineCle + 2,
-        destinataires: [
-          {
-            cle: b.prochaineCle,
-            nom,
-            telephone,
-            lieu,
-            adresse,
-            repere: repere ?? null,
-            colis: [{ cle: b.prochaineCle + 1, format: null, description: '', fragile: false }],
-          },
-        ],
+        prochaineCle: b.prochaineCle + 1,
+        destinataires: [{ cle: b.prochaineCle, nom, telephone, lieu, adresse, repere: repere ?? null }],
       })),
 
     modifierDestinataire: (index, changements) =>
-      modifierDestinataires((liste) => liste.map((d, i) => (i === index ? { ...d, ...changements } : d))),
+      setBrouillon((b) => ({ ...b, destinataires: b.destinataires.map((d, i) => (i === index ? { ...d, ...changements } : d)) })),
 
-    retirerDestinataire: (index) => modifierDestinataires((liste) => liste.filter((_, i) => i !== index)),
-
-    /** Ajoute un colis, déjà décrit, au destinataire (écran « Ajouter un colis »). */
-    ajouterColis: (indexDestinataire, { format, description, fragile }) =>
-      setBrouillon((b) => ({
-        ...b,
-        depot: null,
-        prochaineCle: b.prochaineCle + 1,
-        destinataires: b.destinataires.map((d, i) =>
-          i === indexDestinataire ? { ...d, colis: [...d.colis, { cle: b.prochaineCle, format, description, fragile }] } : d,
-        ),
-      })),
-
-    modifierColis: (indexDestinataire, indexColis, changements) =>
-      modifierDestinataires((liste) =>
-        liste.map((d, i) =>
-          i === indexDestinataire ? { ...d, colis: d.colis.map((c, j) => (j === indexColis ? { ...c, ...changements } : c)) } : d,
-        ),
-      ),
-
-    retirerColis: (indexDestinataire, indexColis) =>
-      modifierDestinataires((liste) =>
-        liste.map((d, i) => (i === indexDestinataire ? { ...d, colis: d.colis.filter((_, j) => j !== indexColis) } : d)),
-      ),
+    retirerDestinataire: (index) => setBrouillon((b) => ({ ...b, destinataires: b.destinataires.filter((_, i) => i !== index) })),
 
     choisirModeReception: (mode) => modifier({ modeReception: mode }),
 
     /**
      * Crée le brouillon sur le serveur, ou le remplace s'il existe déjà, puis
-     * charge le devis (station B, supplément du mode de réception).
-     *
-     * Le remplacement recrée les colis, sans leurs photos : il n'a donc lieu
-     * que si la saisie a changé depuis le dernier envoi.
+     * charge le devis indicatif (station B, grille des formats, supplément du
+     * mode de réception). Rien n'est renvoyé si la saisie n'a pas changé.
      */
     enregistrerBrouillon: async () => {
       const b = actuel.current;
@@ -224,19 +176,9 @@ export function FournisseurEnvoi({ children }) {
       return commande;
     },
 
-    /** Note qu'un colis du brouillon a sa photo sur le serveur. */
-    marquerPhoto: (codeSuivi) =>
-      setBrouillon((b) => ({
-        ...b,
-        commande: b.commande && {
-          ...b.commande,
-          colis: b.commande.colis.map((c) => (c.codeSuivi === codeSuivi ? { ...c, aUnePhoto: true } : c)),
-        },
-      })),
-
     choisirModeReglement: (mode) => modifier({ modeReglement: mode }),
 
-    /** Confirme la commande avec le mode de règlement choisi. */
+    /** Confirme l'envoi : le serveur émet le code de dépôt, valable 48 h. */
     confirmer: async () => {
       const b = actuel.current;
       const commande = await confirmerCommande(b.commande.id, { modeReglement: b.modeReglement });

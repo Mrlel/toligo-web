@@ -124,8 +124,7 @@ function CarteEnvoi({ colis }) {
   const action = colis.action?.type;
   const urgent = action in BADGES_ACTION;
   const badge = BADGES_ACTION[action] ?? libelleStatutColis(colis.statut);
-  const paiement = colis.paiementStatut === 'paye' ? ' payé' : colis.paiementStatut === 'a_la_livraison' ? ' à la livraison' : '';
-  const detail = detailAction(colis) ?? `1 colis ${colis.format?.libelle ?? ''} · ${prix(colis.prix)}${paiement}`;
+  const detail = detailAction(colis) ?? resumeColis(colis);
 
   return (
     <Carte className={`carte-envoi${urgent ? ' carte-envoi--urgente' : ''}`} onClick={() => ouvrirColis(naviguer, colis)}>
@@ -152,22 +151,28 @@ function CarteEnvoi({ colis }) {
 /** Badge d'un envoi qui attend le client. */
 const BADGES_ACTION = {
   depot_entrepot: 'À déposer',
-  nouveau_code: 'Code expiré',
-  paiement: 'Paiement en attente',
-  complement: 'Complément à payer',
+  reactivation: 'Expiré',
 };
+
+/** « Colis Moyen · 2 500 F payé », ou « Prix fixé au dépôt » avant la pesée. */
+function resumeColis(colis) {
+  if (!colis.format || colis.prix <= 0) return 'Prix fixé au dépôt';
+  const paiement =
+    colis.paiementStatut === 'paye'
+      ? ' payé'
+      : ['a_payer_livraison', 'a_la_livraison'].includes(colis.paiementStatut)
+        ? ' à payer à la livraison'
+        : '';
+  return `Colis ${colis.format.libelle} · ${prix(colis.prix)}${paiement}`;
+}
 
 /** Ce que le client doit faire, en une ligne ; null si rien n'est attendu. */
 export function detailAction(colis) {
   switch (colis.action?.type) {
     case 'depot_entrepot':
       return `Apportez-le à ${colis.action.entrepot?.nom ?? 'l’entrepôt'} avec le code ${colis.action.code ?? ''}`;
-    case 'nouveau_code':
-      return 'Code de dépôt expiré : demandez-en un nouveau';
-    case 'paiement':
-      return 'Réglez la commande pour recevoir votre code de dépôt';
-    case 'complement':
-      return `Format changé : complément de ${prix(colis.action.montant ?? 0)} à payer`;
+    case 'reactivation':
+      return 'Envoi expiré : réactivez-le pour obtenir un nouveau code';
     default:
       return null;
   }

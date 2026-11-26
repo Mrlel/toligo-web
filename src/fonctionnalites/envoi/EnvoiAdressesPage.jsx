@@ -26,8 +26,8 @@ import './envoi.css';
  * Maquette A-Envoi-Adresses (étape 1) : adresse de l'expéditeur et
  * destinataire (un seul par commande, workflow V3.3).
  *
- * L'adresse de l'expéditeur sert à choisir le box de dépôt le plus proche :
- * plus aucun livreur ne vient chercher le colis.
+ * L'adresse de l'expéditeur sert à proposer les entrepôts de dépôt les plus
+ * proches : plus aucun livreur ne vient chercher le colis.
  */
 export default function EnvoiAdressesPage() {
   const naviguer = useNavigate();
@@ -94,7 +94,7 @@ export default function EnvoiAdressesPage() {
           lignes={
             collecte
               ? [collecte.adresse, `${collecte.nomContact} · ${afficherTelephone(collecte.telephone)}`]
-              : ['Vous déposerez vos colis dans un box Tôligo près de cette adresse.']
+              : ['Vous déposerez vos colis dans un entrepôt Tôligo près de cette adresse.']
           }
           action={collecte ? 'Changer' : 'Choisir'}
           onAction={() => naviguer(Routes.envoiCollecte)}
@@ -105,7 +105,7 @@ export default function EnvoiAdressesPage() {
             rond={<AvatarInitiales nom={destinataire.nom} rang={i} taille={42} />}
             etiquette="Destinataire"
             titre={destinataire.nom}
-            lignes={[destinataire.adresse, `${afficherTelephone(destinataire.telephone)} · ${destinataire.colis.length} colis`]}
+            lignes={[destinataire.adresse, afficherTelephone(destinataire.telephone)]}
             adresseValidee
             action="Modifier"
             onAction={() => naviguer(Routes.modifierDestinataire(i))}

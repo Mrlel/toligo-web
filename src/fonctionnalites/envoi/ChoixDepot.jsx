@@ -7,20 +7,20 @@ import { sitesDeDepot, stationsDeDepot } from './api';
 
 /**
  * Choix du lieu de dépôt (§9.1) : la station qui arrange l'expéditeur, puis le
- * site où il déposera ses colis en box de réception.
+ * site (entrepôt) où il apportera ses colis.
  *
  * Deux temps dans le même composant : la liste des stations qui desservent
  * l'adresse d'expédition, puis celle des sites de la station retenue. Les deux
  * vont du plus proche au plus lointain, distances calculées par le serveur.
  *
  * `onChoisir({ station, site })` est appelé dès qu'un site est retenu, et
- * `onChoisir(null)` quand l'expéditeur préfère laisser Tôligo décider : c'est
- * le comportement d'origine, le serveur attribue alors le box le plus proche.
+ * `onChoisir(null)` quand l'expéditeur préfère laisser Tôligo décider : le
+ * serveur retient alors l'entrepôt le plus proche à la confirmation.
  *
- * Un site qui ne peut pas accueillir tous les colis est affiché mais non
- * sélectionnable : la création de la commande le refuserait.
+ * Tous les sites sont sélectionnables (26/11/2026) : le nombre de box libres
+ * n'est qu'une information, un colis sans box libre attend à l'entrepôt.
  */
-export function ChoixDepot({ position, formats = [], choix, onChoisir, avecAutomatique = true }) {
+export function ChoixDepot({ position, choix, onChoisir, avecAutomatique = true }) {
   const [stations, setStations] = useState(null);
   const [erreur, setErreur] = useState(null);
   const [station, setStation] = useState(choix?.station ?? null);
@@ -42,12 +42,12 @@ export function ChoixDepot({ position, formats = [], choix, onChoisir, avecAutom
       setErreurSites(null);
       setSites(null);
       try {
-        setSites(await sitesDeDepot(laStation.id, position, formats));
+        setSites(await sitesDeDepot(laStation.id, position));
       } catch (e) {
         setErreurSites(e);
       }
     },
-    [position.latitude, position.longitude, formats.join('|')],
+    [position.latitude, position.longitude],
   );
 
   useEffect(() => {
@@ -94,14 +94,8 @@ export function ChoixDepot({ position, formats = [], choix, onChoisir, avecAutom
         {sites !== null && sites.length > 0 && (
           <Cascade style={{ marginTop: 12 }}>
             {sites.map((site) => {
-              const refuse = site.accueilleToutLaCommande === false;
               return (
-                <Option
-                  key={site.id}
-                  choisie={choix?.site?.id === site.id}
-                  desactivee={refuse}
-                  onClick={() => onChoisir({ station, site })}
-                >
+                <Option key={site.id} choisie={choix?.site?.id === site.id} onClick={() => onChoisir({ station, site })}>
                   <div>
                     <p className="demi-gras" style={{ fontSize: 15 }}>
                       {site.nom}
@@ -114,9 +108,7 @@ export function ChoixDepot({ position, formats = [], choix, onChoisir, avecAutom
                     <p className="texte-secondaire" style={{ fontSize: 12.5, marginTop: 2 }}>
                       {[
                         site.distanceKm != null ? distance(site.distanceKm) : null,
-                        refuse
-                          ? 'pas assez de box libres pour tous vos colis'
-                          : `${site.nbBoxLibres} box libre${site.nbBoxLibres > 1 ? 's' : ''}`,
+                        `${site.nbBoxLibres} box libre${site.nbBoxLibres > 1 ? 's' : ''}`,
                       ]
                         .filter(Boolean)
                         .join(' · ')}
@@ -148,7 +140,7 @@ export function ChoixDepot({ position, formats = [], choix, onChoisir, avecAutom
                 Laisser Tôligo choisir
               </p>
               <p className="texte-secondaire" style={{ fontSize: 12.5, marginTop: 2, lineHeight: 1.35 }}>
-                L’entrepôt le plus proche de votre adresse qui a de la place, dans la station la plus proche.
+                L’entrepôt le plus proche de votre adresse, dans la station la plus proche.
               </p>
             </div>
           </div>

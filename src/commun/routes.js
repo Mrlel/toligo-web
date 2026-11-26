@@ -24,7 +24,6 @@ export const Routes = {
   envoiDestinataire: '/envoi/destinataire',
   modifierDestinataire: (index) => `/envoi/destinataire/${index}`,
   envoiColis: '/envoi/colis',
-  envoiColisAjout: (indexDestinataire = 0) => `/envoi/colis/ajout?pour=${indexDestinataire}`,
   envoiDepot: '/envoi/depot',
   envoiReception: '/envoi/reception',
   envoiRecap: '/envoi/recapitulatif',

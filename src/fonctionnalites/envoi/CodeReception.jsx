@@ -5,12 +5,12 @@ import { jourEtHeure } from '../../utils/formatage';
 import './envoi.css';
 
 /**
- * Code de réception d'une commande (CDC V3.3, audit §24).
+ * Code de dépôt d'une commande (audit §24, mise à jour du 26/11/2026).
  *
- * Le client ne dépose plus lui-même ses colis dans un box : il se présente à
- * l'entrepôt avec ses colis et donne ce code au gestionnaire, qui les
- * réceptionne et les range dans leurs box. Un seul code pour toute la
- * commande, valable 72 h.
+ * Le client se présente à l'entrepôt avec ses colis et donne ce code au
+ * gestionnaire, qui les pèse, les mesure et fixe le prix réel. Un seul code
+ * pour toute la commande, valable 48 h : passé ce délai, l'envoi expire et
+ * peut être réactivé.
  *
  * `site` : l'entrepôt où se présenter (nom, adresse, coordonnées).
  */
@@ -57,8 +57,8 @@ export function CodeReception({ code, expireLe, site }) {
       )}
 
       <p className="code-reception__aide">
-        Présentez-vous avec vos colis et donnez ce code au gestionnaire de l’entrepôt : il les réceptionne et les range lui-même
-        dans leurs box.
+        Présentez-vous avec vos colis et donnez ce code au gestionnaire de l’entrepôt : il les pèse, les mesure et vous propose le
+        prix réel.
       </p>
     </div>
   );

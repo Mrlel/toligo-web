@@ -632,64 +632,186 @@ a.code-suivi {
   color: var(--texte-secondaire);
 }
 
-/* Photo d'un colis dans le récapitulatif : vignette cliquable. */
-.photo-colis {
-  position: relative;
+/* --- Nombre de colis (étape « Colis ») --- */
+.compteur-colis {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--rayon-carte);
+  background: var(--surface);
+}
+
+.compteur-colis__bouton {
   flex: none;
   display: grid;
   place-items: center;
   width: 52px;
   height: 52px;
-  border: 1.5px dashed var(--pointilles);
-  border-radius: 16px;
-  color: var(--texte-secondaire);
+  border: 0;
+  border-radius: 50%;
+  background: var(--encre);
+  color: var(--blanc);
   cursor: pointer;
 }
 
-.photo-colis:hover {
-  background: var(--surface-selection);
+.compteur-colis__bouton:hover:not(:disabled) {
+  background: #2a2a2e;
 }
 
-.photo-colis:focus-within {
-  outline: 2px solid var(--encre);
-  outline-offset: 2px;
+.compteur-colis__bouton:disabled {
+  background: var(--gris-rond);
+  cursor: default;
 }
 
-.photo-colis--faite {
-  border: 0;
-  background: var(--surface);
+.compteur-colis__centre {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.photo-colis img,
-.photo-colis .image-protegee {
+.compteur-colis__valeur {
   width: 100%;
-  height: 100%;
-  border-radius: 16px;
-  object-fit: cover;
+  max-width: 120px;
+  border: 0;
+  background: transparent;
+  font-family: var(--police-titre);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  color: var(--encre);
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
-.photo-colis__coche {
-  position: absolute;
-  right: -5px;
-  bottom: -5px;
+.compteur-colis__valeur::-webkit-outer-spin-button,
+.compteur-colis__valeur::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.compteur-colis__valeur:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 4px;
+  border-radius: var(--rayon-petit);
+}
+
+.compteur-colis__unite {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--texte-secondaire);
+}
+
+/* --- Grille indicative des formats : une carte par format, côte à côte ---
+   Trois colonnes sur téléphone (Petit · Moyen · Grand) ; un quatrième format
+   passerait à la ligne plutôt que d'écraser les cartes. */
+.grille-tarifs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(98px, 1fr));
+  gap: 8px;
+}
+
+/* La cascade enveloppe chaque carte : toutes ont la même hauteur. */
+.grille-tarifs > .cascade__element {
+  display: flex;
+}
+
+.carte-tarif {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px 14px;
+  border-radius: var(--rayon-option);
+  border: 1px solid var(--bordure);
+  background: var(--blanc);
+  text-align: center;
+}
+
+.carte-tarif .vignette-format {
+  width: 56px;
+  height: 56px;
+}
+
+.carte-tarif__libelle {
+  margin-top: 8px;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.carte-tarif__prix {
+  margin-top: 4px;
+  font-family: var(--police-titre);
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.carte-tarif__unite {
+  font-size: 11.5px;
+  color: var(--texte-secondaire);
+}
+
+.carte-tarif__detail {
+  margin-top: auto;
+  padding-top: 8px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--texte-secondaire);
+}
+
+/* Estimation du récapitulatif : fourchette en grand, sous-titre discret. */
+.estimation {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.estimation h3 {
+  flex: 1;
+  font-size: 16px;
+}
+
+.estimation strong {
+  font-family: var(--police-titre);
+  font-size: 21px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* --- Ce qui se passe au comptoir de l'entrepôt --- */
+.etapes-depot {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.etapes-depot li {
+  display: flex;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.etapes-depot li + li {
+  margin-top: 12px;
+}
+
+.etapes-depot__numero {
+  flex: none;
   display: grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--blanc);
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background: var(--succes);
+  background: var(--encre);
   color: var(--blanc);
-}
-
-.photo-colis__etat {
-  display: block;
-  margin-top: 2px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--accent-fonce);
-}
-
-.photo-colis__etat--faite {
-  color: var(--succes);
+  font-size: 13px;
+  font-weight: 700;
 }

@@ -3,7 +3,10 @@ import { lireListe, lireNombre } from '../utils/lecture';
 
 /**
  * Formats de colis (Petit, Moyen, Grand...), fixés par l'administrateur.
- * Le client choisit un format : ni poids ni dimensions à saisir.
+ *
+ * Depuis le 26/11/2026, le client ne choisit plus de format : le gestionnaire
+ * de l'entrepôt pèse et mesure chaque colis, et le format en découle. Les
+ * formats ne servent plus, côté client, qu'à afficher une grille indicative.
  */
 
 /** « jusqu'à 5 kg » */
@@ -12,7 +15,16 @@ export function poidsLisible(poidsMaxKg) {
   return `jusqu'à ${poids} kg`;
 }
 
+/** « 35 × 25 × 15 cm », ou null si une dimension manque. */
+export function dimensionsLisibles(dimensions) {
+  const { longueur, largeur, hauteur } = dimensions ?? {};
+  if (!longueur || !largeur || !hauteur) return null;
+  const cm = (v) => (Number.isInteger(v) ? v : v.toFixed(1).replace('.', ','));
+  return `${cm(longueur)} × ${cm(largeur)} × ${cm(hauteur)} cm`;
+}
+
 function versFormat(json) {
+  const dimensions = json.dimensions_max_cm && typeof json.dimensions_max_cm === 'object' ? json.dimensions_max_cm : {};
   return {
     id: json.id,
     code: json.code ?? '',
@@ -20,6 +32,11 @@ function versFormat(json) {
     description: json.description ?? '',
     icone: json.icone ?? null,
     poidsMaxKg: lireNombre(json.poids_max_kg) ?? 0,
+    dimensions: {
+      longueur: lireNombre(dimensions.longueur),
+      largeur: lireNombre(dimensions.largeur),
+      hauteur: lireNombre(dimensions.hauteur),
+    },
     prix: lireNombre(json.prix) ?? 0,
   };
 }

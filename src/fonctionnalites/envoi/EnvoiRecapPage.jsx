@@ -1,113 +1,56 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Banknote, Camera, Check, Smartphone } from 'lucide-react';
+import { HandCoins, Scale, Store, Warehouse } from 'lucide-react';
 
-import { BarreEtapes, Bouton, Carte, EncadreInfo, EnTete, IconeBox, Option, Page, PiedDAction, Roue, useMessages } from '../../composants';
+import { BarreEtapes, Bouton, Carte, Cascade, EncadreInfo, EnTete, Option, Page, PiedDAction, useMessages } from '../../composants';
+import { dimensionsLisibles, poidsLisible } from '../../commun/formats';
 import { Routes } from '../../commun/routes';
 import { useSession } from '../../session/Session';
-import { distance, prix } from '../../utils/formatage';
-import { preparerPhoto } from '../../utils/photo';
-import { fermerOnglet, ouvrirPagePaiement, preparerOngletPaiement } from '../paiement/paiement';
-import { ImageProtegee } from '../suivi/ImageProtegee';
-import { adressePhotoColis, envoyerPhotoColis, libelleModeReception, payerCommande } from './api';
+import { distance, prenom, prix } from '../../utils/formatage';
+import { libelleModeReception } from './api';
+import { CarteTarif, fourchetteLisible } from './ColisCommun';
 import { etapesEnvoi, useEnvoi } from './EtatEnvoi';
 import './envoi.css';
 
 /**
- * Maquette A-Envoi-Recap (dernière étape) : récapitulatif, photo de chaque
- * colis, choix de qui paie, puis confirmation de la commande.
+ * Dernière étape (mise à jour du 26/11/2026) : récapitulatif, estimation du
+ * prix, choix du mode de paiement, puis confirmation de l'envoi.
  *
- * Le devis vient du serveur : station d'arrivée choisie par Tôligo, prix des
- * formats et supplément du mode de réception.
+ * Plus de paiement en ligne ni de photo : le prix réel est fixé au comptoir de
+ * l'entrepôt, après la pesée et la mesure de chaque colis, et l'expéditeur
+ * l'accepte avec un code reçu par SMS. Il paie alors sur place, ou c'est le
+ * destinataire qui paie à la livraison.
  *
- * Écart avec la maquette : la vignette de chaque colis devient sa photo. Le
- * serveur exige une photo par colis avant la confirmation (CDC V3.3 §11.2) ;
- * elle part dès qu'elle est choisie, sur le colis du brouillon.
- *
- * « Payer » confirme la commande puis ouvre directement la page GeniusPay
- * dans un nouvel onglet ; le client retrouve sa commande dans « Mes envois »
- * (le suivi du colis permet de relancer le paiement).
+ * La confirmation émet le code de dépôt (48 h), affiché à l'écran suivant.
  */
 export default function EnvoiRecapPage() {
   const naviguer = useNavigate();
   const { profil } = useSession();
-  const { afficherMessage, afficherErreur } = useMessages();
-  const { brouillon, choisirModeReglement, confirmer, marquerPhoto, reinitialiser } = useEnvoi();
+  const { afficherErreur } = useMessages();
+  const { brouillon, choisirModeReglement, confirmer, reinitialiser } = useEnvoi();
   const [enCours, setEnCours] = useState(false);
-  // Photos envoyées depuis cet écran : aperçu local, par numéro de suivi.
-  const [apercus, setApercus] = useState({});
-  const [envoisPhoto, setEnvoisPhoto] = useState({});
-  const apercusActuels = useRef(apercus);
-  apercusActuels.current = apercus;
   // Vrai une fois la commande confirmée : le brouillon est alors vidé, et
   // l'écran ne doit pas renvoyer au début du parcours pendant qu'on le quitte.
   const termine = useRef(false);
-
-  // Les aperçus sont libérés de la mémoire quand on quitte l'écran.
-  useEffect(() => () => Object.values(apercusActuels.current).forEach((adresse) => URL.revokeObjectURL(adresse)), []);
 
   const commande = brouillon.commande;
   if (!commande) return termine.current ? null : <Navigate to={Routes.envoi} replace />;
 
   const devis = brouillon.devis;
-  const total = devis?.montantTotal ?? commande.montantTotal;
-  const enLigne = brouillon.modeReglement === 'en_ligne';
+  const surPlace = brouillon.modeReglement !== 'a_la_livraison';
   const aLaLivraisonPossible = profil?.paiementALaLivraison ?? false;
   const etapes = etapesEnvoi(brouillon);
-  const photosManquantes = commande.colis.filter((c) => !c.aUnePhoto).length;
-
-  async function choisirPhoto(colis, fichier) {
-    if (!fichier) return;
-    const code = colis.codeSuivi;
-    setEnvoisPhoto((e) => ({ ...e, [code]: true }));
-    try {
-      const photo = await preparerPhoto(fichier);
-      await envoyerPhotoColis(code, photo);
-      if (apercusActuels.current[code]) URL.revokeObjectURL(apercusActuels.current[code]);
-      const adresse = URL.createObjectURL(photo);
-      setApercus((a) => ({ ...a, [code]: adresse }));
-      marquerPhoto(code);
-    } catch (erreur) {
-      afficherErreur(erreur);
-    } finally {
-      setEnvoisPhoto((e) => ({ ...e, [code]: false }));
-    }
-  }
+  const nbColis = devis?.nbColis || commande.nbColisDeclares || commande.colis.length;
+  const site = commande.siteDepot ?? brouillon.depot?.site ?? null;
 
   async function valider() {
-    if (photosManquantes > 0) {
-      afficherMessage('Ajoutez la photo de chaque colis avant de confirmer.');
-      return;
-    }
-    // L'onglet de paiement s'ouvre dans le clic, sinon le navigateur le bloque.
-    const onglet = enLigne ? preparerOngletPaiement() : null;
     setEnCours(true);
     try {
       const confirmee = await confirmer();
-
-      // Un prix a pu changer depuis le devis : on prévient.
-      if (confirmee.montantTotal !== total) afficherMessage(`Montant mis à jour : ${prix(confirmee.montantTotal)}.`);
-
-      if (confirmee.modeReglement === 'en_ligne') {
-        try {
-          const paiement = await payerCommande(confirmee.id);
-          if (!ouvrirPagePaiement(paiement.checkoutUrl, onglet)) {
-            afficherMessage("Impossible d'ouvrir la page de paiement. Autorisez les fenêtres pop-up pour ce site.");
-          }
-        } catch (erreur) {
-          // La commande est confirmée : le paiement pourra être relancé depuis le suivi du colis.
-          fermerOnglet(onglet);
-          afficherErreur(erreur);
-        }
-        // Le client paie sur la page GeniusPay ; sa commande est dans « Mes envois ».
-        naviguer(Routes.envois, { replace: true });
-      } else {
-        naviguer(Routes.commandeConfirmee(confirmee.id), { replace: true });
-      }
       termine.current = true;
+      naviguer(Routes.commandeConfirmee(confirmee.id), { replace: true });
       reinitialiser();
     } catch (erreur) {
-      fermerOnglet(onglet);
       afficherErreur(erreur);
       setEnCours(false);
     }
@@ -128,8 +71,8 @@ export default function EnvoiRecapPage() {
       entete={<EnTete titre="Nouvel envoi" gris repli={Routes.envoiReception} />}
       pied={
         <PiedDAction arrondi>
-          <Bouton variante={enLigne ? 'accent' : 'principal'} enCours={enCours} onClick={valider}>
-            {enLigne ? `Payer ${prix(total)}` : 'Confirmer la commande'}
+          <Bouton enCours={enCours} onClick={valider}>
+            Confirmer l’envoi
           </Bouton>
         </PiedDAction>
       }
@@ -151,91 +94,89 @@ export default function EnvoiRecapPage() {
           dernier
         />
 
-        <p className="texte-secondaire" style={{ fontSize: 12.5, margin: '4px 0 10px' }}>
+        <p className="texte-secondaire" style={{ fontSize: 12.5, margin: '4px 0 0' }}>
           {detailReception}
         </p>
 
-        {commande.colis.map((colis, i) => (
-          <div key={colis.id} className="rangee" style={{ gap: 10, marginTop: 10 }}>
-            <PhotoColis
-              colis={colis}
-              rang={i + 1}
-              apercu={apercus[colis.codeSuivi]}
-              enCours={envoisPhoto[colis.codeSuivi] ?? false}
-              onChoisir={(fichier) => choisirPhoto(colis, fichier)}
-            />
-            <span className="extensible">
-              <span className="demi-gras" style={{ display: 'block', fontSize: 14 }}>
-                Colis {i + 1} · {colis.format?.libelle ?? ''}
-              </span>
-              <span className="texte-secondaire une-ligne" style={{ display: 'block', fontSize: 12.5 }}>
-                {colis.description}
-              </span>
-              <span className={`photo-colis__etat${colis.aUnePhoto ? ' photo-colis__etat--faite' : ''}`}>
-                {colis.aUnePhoto ? 'Photo ajoutée' : 'Photo à ajouter'}
-              </span>
-            </span>
-            <span style={{ fontSize: 14, fontWeight: 700 }}>{prix(colis.prix)}</span>
-          </div>
-        ))}
-
-        {photosManquantes > 0 && (
-          <div style={{ marginTop: 12 }}>
-            <EncadreInfo accent icone={Camera}>
-              Prenez chaque colis en photo : la station s'en sert pour le reconnaître, et elle sert de preuve en cas de litige.
-            </EncadreInfo>
-          </div>
-        )}
-
-        {(devis?.montantSupplement ?? 0) > 0 && (
-          <div className="rangee" style={{ gap: 10, marginTop: 10, fontSize: 14 }}>
-            <span className="extensible texte-secondaire">{libelleModeReception(commande.modeReception)}</span>
-            <span style={{ fontWeight: 700 }}>{prix(devis.montantSupplement)}</span>
-          </div>
-        )}
-
         <div className="encadre-info" style={{ fontSize: 12.5, marginTop: 12 }}>
-          <IconeBox size={18} />
+          <Warehouse size={18} aria-hidden="true" />
           <span>
-            {commande.siteDepot
-              ? `Après la confirmation, vous recevez un box et son code pour déposer vos colis à ${commande.siteDepot.nom}${
-                  commande.siteDepot.adresse ? ` (${commande.siteDepot.adresse})` : ''
-                }.`
-              : 'Après la confirmation, vous recevez un box Tôligo près de chez vous et un code pour y déposer vos colis.'}
+            {site
+              ? `Dépôt à ${site.nom}${site.adresse ? ` (${site.adresse})` : ''}.`
+              : 'Dépôt dans l’entrepôt Tôligo le plus proche de chez vous, indiqué à la confirmation.'}
           </span>
-        </div>
-
-        <div className="total" style={{ marginTop: 14 }}>
-          <h3>Total · {commande.colis.length} colis</h3>
-          <strong>{prix(total)}</strong>
         </div>
       </Carte>
 
-      <h2 style={{ fontSize: 16, margin: '14px 0 10px' }}>Qui paie la livraison ?</h2>
+      <p className="etiquette-section" style={{ margin: '20px 0 10px', fontSize: 13, letterSpacing: 0.6 }}>
+        Tarifs indicatifs · {nbColis} colis
+      </p>
+      <Cascade className="grille-tarifs">
+        {(devis?.grille ?? []).map((ligne) => (
+          <CarteTarif
+            key={ligne.id}
+            format={ligne}
+            poids={ligne.poidsMaxKg ? poidsLisible(ligne.poidsMaxKg) : null}
+            dimensions={dimensionsLisibles(ligne.dimensions)}
+            montant={ligne.prixColis}
+          />
+        ))}
+      </Cascade>
+
+      <Carte style={{ padding: 16, marginTop: 10 }}>
+        {(devis?.montantSupplement ?? 0) > 0 && (
+          <div className="rangee" style={{ gap: 10, fontSize: 14, marginBottom: 10 }}>
+            <span className="extensible texte-secondaire">
+              {libelleModeReception(commande.modeReception)}
+              {devis?.distanceKm != null ? ` · ${distance(devis.distanceKm)}` : ''}
+            </span>
+            <span style={{ fontWeight: 700 }}>+ {prix(devis.montantSupplement)}</span>
+          </div>
+        )}
+        <div className="estimation">
+          <h3>
+            Estimation
+            <span className="texte-secondaire" style={{ display: 'block', fontSize: 12.5, fontWeight: 500 }}>
+              {nbColis} colis{(devis?.montantSupplement ?? 0) > 0 ? ', supplément compris' : ''}
+            </span>
+          </h3>
+          <strong>{devis ? fourchetteLisible(devis.estimation) : '—'}</strong>
+        </div>
+        <div style={{ marginTop: 12 }}>
+          <EncadreInfo icone={Scale}>
+            Le prix réel est fixé au dépôt, d’après le poids et les dimensions de chaque colis. Vous l’acceptez avec un code reçu
+            par SMS ; s’il ne vous convient pas, l’envoi est annulé sans frais.
+          </EncadreInfo>
+        </div>
+      </Carte>
+
+      <h2 style={{ fontSize: 16, margin: '18px 0 10px' }}>Qui paie l’envoi ?</h2>
       <div className="pile" style={{ gap: 8 }}>
         <OptionReglement
-          icone={Smartphone}
-          titre="Je paie maintenant"
-          detail={`Mobile money · ${prix(total)}`}
-          choisie={enLigne}
-          onClick={() => choisirModeReglement('en_ligne')}
+          icone={Store}
+          titre="Je paie au dépôt"
+          detail="En espèces ou par Mobile Money (Wave, Orange, MTN), une fois le prix réel accepté"
+          choisie={surPlace}
+          onClick={() => choisirModeReglement('sur_place')}
         />
         <OptionReglement
-          icone={Banknote}
+          icone={HandCoins}
           titre="Paiement à la livraison"
           detail={
             aLaLivraisonPossible
-              ? 'Le destinataire règle la commande avant la remise'
+              ? `${prenom(commande.destinataireNom)} paie à la remise. Le montant lui est envoyé par SMS dès le dépôt.`
               : (profil?.motifPaiementALaLivraison ?? 'Indisponible pour votre compte')
           }
-          choisie={!enLigne}
+          choisie={!surPlace}
           desactivee={!aLaLivraisonPossible}
           onClick={() => choisirModeReglement('a_la_livraison')}
         />
       </div>
-      {!enLigne && (
+      {!surPlace && (
         <div style={{ marginTop: 10 }}>
-          <EncadreInfo>En cas de refus de payer, le colis vous est retourné et la livraison comme le retour restent à votre charge.</EncadreInfo>
+          <EncadreInfo>
+            Si le destinataire refuse deux fois de payer, le colis vous est retourné et les frais de retour sont à votre charge.
+          </EncadreInfo>
         </div>
       )}
     </Page>
@@ -243,7 +184,7 @@ export default function EnvoiRecapPage() {
 }
 
 /** Un arrêt du récapitulatif, relié au suivant par un pointillé. */
-function ArretRecap({ repere, etiquette, titre, detail, fin, dernier }) {
+function ArretRecap({ repere, etiquette, titre, detail, dernier }) {
   return (
     <div className={`arret-recap${dernier ? ' arret-recap--dernier' : ''}`}>
       <span className="arret-recap__repere">{repere}</span>
@@ -259,49 +200,12 @@ function ArretRecap({ repere, etiquette, titre, detail, fin, dernier }) {
             {detail}
           </p>
         </div>
-        {fin}
       </div>
     </div>
   );
 }
 
-/**
- * Vignette d'un colis : sa photo, ou un appareil photo tant qu'elle manque.
- * Un nouveau choix remplace la photo, jusqu'à la confirmation.
- */
-function PhotoColis({ colis, rang, apercu, enCours, onChoisir }) {
-  let contenu = <Camera size={20} />;
-  if (enCours) contenu = <Roue />;
-  else if (apercu) contenu = <img src={apercu} alt={`Photo du colis ${rang}`} />;
-  else if (colis.aUnePhoto) contenu = <ImageProtegee url={adressePhotoColis(colis.codeSuivi)} hauteur={52} alt={`Photo du colis ${rang}`} />;
-
-  return (
-    <label
-      className={`photo-colis${colis.aUnePhoto ? ' photo-colis--faite' : ''}`}
-      title={colis.aUnePhoto ? 'Changer la photo' : 'Ajouter la photo du colis'}
-    >
-      {contenu}
-      {colis.aUnePhoto && !enCours && (
-        <span className="photo-colis__coche">
-          <Check size={11} strokeWidth={3} />
-        </span>
-      )}
-      <input
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        className="invisible"
-        disabled={enCours}
-        aria-label={colis.aUnePhoto ? `Changer la photo du colis ${rang}` : `Ajouter la photo du colis ${rang}`}
-        onChange={(e) => {
-          onChoisir(e.target.files?.[0] ?? null);
-          e.target.value = '';
-        }}
-      />
-    </label>
-  );
-}
-
-/** Option « Je paie maintenant » / « Paiement à la livraison ». */
+/** Option « Je paie au dépôt » / « Paiement à la livraison ». */
 function OptionReglement({ icone: Icone, titre, detail, choisie, desactivee = false, onClick }) {
   return (
     <Option choisie={choisie} desactivee={desactivee} onClick={onClick}>

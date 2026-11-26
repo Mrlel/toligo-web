@@ -22,7 +22,6 @@ import CodeTemporairePage from './fonctionnalites/box/CodeTemporairePage';
 import EntrepotsPage from './fonctionnalites/box/EntrepotsPage';
 import MesBoxPage from './fonctionnalites/box/MesBoxPage';
 import ChoixCollectePage from './fonctionnalites/envoi/ChoixCollectePage';
-import ColisAjoutPage from './fonctionnalites/envoi/ColisAjoutPage';
 import CommandeConfirmeePage from './fonctionnalites/envoi/CommandeConfirmeePage';
 import DestinatairePage from './fonctionnalites/envoi/DestinatairePage';
 import EnvoiAdressesPage from './fonctionnalites/envoi/EnvoiAdressesPage';
@@ -131,7 +130,6 @@ export default function App() {
                     <Route path={Routes.envoiDestinataire} element={<DestinatairePage />} />
                     <Route path="/envoi/destinataire/:index" element={<DestinatairePage />} />
                     <Route path={Routes.envoiColis} element={<EnvoiColisPage />} />
-                    <Route path="/envoi/colis/ajout" element={<ColisAjoutPage />} />
                     <Route path={Routes.envoiDepot} element={<EnvoiDepotPage />} />
                     <Route path={Routes.envoiReception} element={<EnvoiReceptionPage />} />
                     <Route path={Routes.envoiRecap} element={<EnvoiRecapPage />} />
