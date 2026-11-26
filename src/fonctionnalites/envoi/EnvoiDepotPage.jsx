@@ -7,9 +7,10 @@ import { etapesEnvoi, useEnvoi } from './EtatEnvoi';
 import './envoi.css';
 
 /**
- * Étape « Dépôt » (§9.1, révision du 13/11/2026) : l'expéditeur choisit la
- * station qui l'arrange, puis l'entrepôt où il apportera ses colis. Le camion
- * de cette station viendra les y prendre.
+ * Étape « Dépôt » (§9.1, révision du 26/11/2026) : l'expéditeur choisit
+ * directement, parmi les entrepôts proches de son adresse, celui où il
+ * apportera ses colis. Le camion de la station qui le dessert viendra les y
+ * prendre ; le client ne voit pas les stations.
  *
  * Le choix est facultatif : avec « Laisser Tôligo choisir », le serveur retient
  * l'entrepôt le plus proche à la confirmation. Il arrive avant la réception,

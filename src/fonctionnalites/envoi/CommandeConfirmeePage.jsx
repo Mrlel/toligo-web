@@ -24,7 +24,7 @@ function phraseReception(mode, station) {
  * 48 h, et ce qui se passe au comptoir de l'entrepôt.
  *
  * Le client se présente avec ses colis ; le gestionnaire les pèse et les
- * mesure, fixe le prix réel, et le client l'accepte avec un code reçu par SMS.
+ * mesure, fixe le prix réel, et le client l'accepte sur place.
  * Il paie alors sur place, ou le destinataire paiera à la livraison.
  */
 export default function CommandeConfirmeePage() {
@@ -124,7 +124,7 @@ export default function CommandeConfirmeePage() {
                     </li>
                     <li>
                       <span className="etapes-depot__numero">3</span>
-                      <span>Vous recevez un code par SMS : donnez-le pour accepter le prix. Sinon, l’envoi est annulé sans frais.</span>
+                      <span>Le gestionnaire vous annonce le prix : acceptez-le sur place. Sinon, l’envoi est annulé sans frais.</span>
                     </li>
                     <li>
                       <span className="etapes-depot__numero">4</span>

@@ -113,7 +113,7 @@ export default function EnvoiColisPage() {
       <div style={{ marginTop: 14 }}>
         <EncadreInfo icone={Scale}>
           Au dépôt, le gestionnaire pèse et mesure chaque colis devant vous : le format et le prix réel en découlent. Vous
-          acceptez ce prix avec un code reçu par SMS. S’il ne vous convient pas, l’envoi est annulé sans frais.
+          acceptez ce prix sur place. S’il ne vous convient pas, l’envoi est annulé sans frais.
         </EncadreInfo>
       </div>
     </Page>

@@ -8,8 +8,8 @@ import { confirmerCommande, creerCommande, devisCommande, remplacerCommande } fr
  *
  * Mise à jour du 26/11/2026 : le client n'indique plus que le NOMBRE de colis.
  * Le gestionnaire de l'entrepôt les pèse et les mesure au comptoir : c'est là
- * que le format et le prix réel sont fixés, et l'expéditeur les accepte par un
- * code reçu par SMS. Dans l'application, le prix n'est qu'une estimation tirée
+ * que le format et le prix réel sont fixés, et l'expéditeur les accepte sur
+ * place. Dans l'application, le prix n'est qu'une estimation tirée
  * de la grille des formats.
  *
  * Le brouillon n'est créé sur le serveur qu'en quittant l'étape « Réception »,
@@ -22,7 +22,7 @@ import { confirmerCommande, creerCommande, devisCommande, remplacerCommande } fr
  * - destinataires : [{ cle, nom, telephone, lieu, adresse, repere }], un seul au plus ;
  * - nbColis : nombre de colis annoncé (1 à NB_MAX_COLIS) ;
  * - instructions : consignes pour la livraison au destinataire ;
- * - depot : lieu de dépôt choisi { station, site }, ou null (Tôligo choisit) ;
+ * - depot : entrepôt de dépôt choisi { site }, ou null (Tôligo choisit) ;
  * - modeReception : `retrait_station`, `livraison_domicile` ou `box_stockage` ;
  * - commande : brouillon créé sur le serveur (null avant l'étape « Réception ») ;
  * - envoye : dernière saisie envoyée au serveur (texte JSON), pour ne pas la
@@ -95,9 +95,8 @@ function versApi(brouillon) {
   return {
     source: 'application',
     adresse_collecte_id: brouillon.collecte.id,
-    // §9.1 : les deux vont ensemble, et sont omis quand l'expéditeur laisse
-    // Tôligo choisir son entrepôt.
-    station_depart_id: brouillon.depot?.station?.id ?? null,
+    // §9.1 : seul l'entrepôt est choisi, le serveur en déduit la station de
+    // départ. Nul quand l'expéditeur laisse Tôligo choisir.
     entrepot_depot_id: brouillon.depot?.site?.id ?? null,
     mode_reception: brouillon.modeReception,
     destinataire_nom: destinataire.nom,
@@ -131,7 +130,7 @@ export function FournisseurEnvoi({ children }) {
   const actions = {
     reinitialiser: () => setBrouillon(BROUILLON_VIDE),
 
-    // L'adresse d'expédition commande la liste des stations : le lieu de dépôt
+    // L'adresse d'expédition commande la liste des entrepôts : le lieu de dépôt
     // choisi pour l'ancienne adresse n'a plus de sens.
     choisirCollecte: (adresse) => modifier({ collecte: adresse, depot: null }),
 

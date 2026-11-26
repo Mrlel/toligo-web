@@ -3,8 +3,8 @@ import { illustrationDuFormat, tailleIllustrationFormat } from '../../commun/for
 import { prix } from '../../utils/formatage';
 
 /**
- * Morceaux communs aux écrans « Colis » et « Récapitulatif » : la grille
- * indicative des formats et la fourchette de prix.
+ * Morceaux des écrans « Colis » (grille indicative des formats) et
+ * « Récapitulatif » (fourchette de prix).
  */
 
 /**

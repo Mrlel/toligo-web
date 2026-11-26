@@ -64,38 +64,25 @@ function versSite(json) {
     latitude: lireNombre(json.latitude),
     longitude: lireNombre(json.longitude),
     distanceKm: lireNombre(json.distance_km),
-    // Information seulement : un colis sans box libre attend à l'entrepôt.
-    nbBoxLibres: lireNombre(json.nb_box_libres) ?? 0,
   };
 }
 
 /**
- * Stations qui desservent l'adresse d'expédition, de la plus proche à la plus
- * lointaine (§9.1). Au-delà du rayon de desserte, aucune n'est proposée : la
- * liste vide n'est pas une erreur.
+ * Entrepôts où l'expéditeur peut déposer ses colis, du plus proche au plus
+ * lointain de son adresse (§9.1, révision du 26/11/2026 : plus de choix de
+ * station). Hors de la zone desservie, aucun n'est proposé : la liste vide
+ * n'est pas une erreur.
  *
  * @param {{latitude: number, longitude: number}} position Adresse d'expédition.
  */
-export async function stationsDeDepot({ latitude, longitude }) {
-  const liste = lireListe(await api.get('/client/stations', { latitude, longitude }));
-  return liste.map((json) => ({
-    ...versStation(json),
-    code: json.code ?? '',
-    distanceKm: lireNombre(json.distance_km),
-    nbSites: lireNombre(json.nb_sites) ?? 0,
-  }));
-}
-
-/** Sites de dépôt d'une station, du plus proche au plus lointain. */
-export async function sitesDeDepot(stationId, { latitude, longitude }) {
-  const chemin = `/client/stations/${encodeURIComponent(stationId)}/entrepots`;
-  return lireListe(await api.get(chemin, { latitude, longitude })).map(versSite);
+export async function entrepotsDeDepot({ latitude, longitude }) {
+  return lireListe(await api.get('/client/sites-depot', { latitude, longitude })).map(versSite);
 }
 
 /**
  * Le refus du serveur porte-t-il sur le lieu de dépôt choisi ? Dans ce cas
- * l'écran de choix est le bon endroit pour le corriger : station qui ne
- * dessert plus l'adresse, site détaché de sa station.
+ * l'écran de choix est le bon endroit pour le corriger : entrepôt qui ne
+ * dessert plus l'adresse, ou détaché de sa station.
  */
 export function refusDuLieuDeDepot(erreur) {
   const champs = erreur?.erreurs ?? {};
@@ -179,28 +166,10 @@ export function versCommande(json) {
   };
 }
 
-/** Une ligne de la grille indicative : un format et le prix d'un colis de ce format. */
-function versLigneGrille(json) {
-  const dimensions = lireObjet(json.dimensions_max_cm);
-  return {
-    id: json.format_id ?? json.id,
-    code: json.code ?? '',
-    libelle: json.libelle ?? '',
-    icone: json.icone ?? null,
-    poidsMaxKg: lireNombre(json.poids_max_kg),
-    dimensions: {
-      longueur: lireNombre(dimensions.longueur),
-      largeur: lireNombre(dimensions.largeur),
-      hauteur: lireNombre(dimensions.hauteur),
-    },
-    // Prix du format, plus la location du box de stockage s'il y a lieu.
-    prixColis: lireNombre(json.prix_colis) ?? 0,
-  };
-}
-
 /**
- * Devis indicatif calculé par le serveur : station B, grille des formats,
- * supplément du mode de réception et fourchette pour le nombre de colis.
+ * Devis indicatif calculé par le serveur : station B, supplément du mode de
+ * réception et fourchette pour le nombre de colis. La grille des formats que
+ * le serveur renvoie aussi n'est plus affichée à la confirmation.
  */
 function versDevis(json) {
   const supplement = lireObjet(json.supplement);
@@ -208,7 +177,6 @@ function versDevis(json) {
     modeReception: json.mode_reception ?? null,
     stationArrivee: versStation(json.station_arrivee),
     nbColis: lireEntier(json.nb_colis) ?? 0,
-    grille: lireListe(json.grille).map(versLigneGrille),
     // Supplément pour toute la commande (livraison à domicile) ; la location
     // du box de stockage est comprise dans le prix de chaque colis.
     montantSupplement: lireNombre(supplement.montant) ?? 0,

@@ -2,23 +2,24 @@ import { useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { HandCoins, Scale, Store, Warehouse } from 'lucide-react';
 
-import { BarreEtapes, Bouton, Carte, Cascade, EncadreInfo, EnTete, Option, Page, PiedDAction, useMessages } from '../../composants';
-import { dimensionsLisibles, poidsLisible } from '../../commun/formats';
+import { BarreEtapes, Bouton, Carte, EncadreInfo, EnTete, Option, Page, PiedDAction, useMessages } from '../../composants';
 import { Routes } from '../../commun/routes';
 import { useSession } from '../../session/Session';
 import { distance, prenom, prix } from '../../utils/formatage';
 import { libelleModeReception } from './api';
-import { CarteTarif, fourchetteLisible } from './ColisCommun';
+import { fourchetteLisible } from './ColisCommun';
 import { etapesEnvoi, useEnvoi } from './EtatEnvoi';
 import './envoi.css';
 
 /**
  * Dernière étape (mise à jour du 26/11/2026) : récapitulatif, estimation du
- * prix, choix du mode de paiement, puis confirmation de l'envoi.
+ * prix, choix du mode de paiement, puis confirmation de l'envoi. Les tarifs
+ * indicatifs par format ne sont plus repris ici : seule l'estimation globale
+ * reste (la grille est montrée à l'étape « Colis »).
  *
  * Plus de paiement en ligne ni de photo : le prix réel est fixé au comptoir de
  * l'entrepôt, après la pesée et la mesure de chaque colis, et l'expéditeur
- * l'accepte avec un code reçu par SMS. Il paie alors sur place, ou c'est le
+ * l'accepte au comptoir. Il paie alors sur place, ou c'est le
  * destinataire qui paie à la livraison.
  *
  * La confirmation émet le code de dépôt (48 h), affiché à l'écran suivant.
@@ -108,22 +109,7 @@ export default function EnvoiRecapPage() {
         </div>
       </Carte>
 
-      <p className="etiquette-section" style={{ margin: '20px 0 10px', fontSize: 13, letterSpacing: 0.6 }}>
-        Tarifs indicatifs · {nbColis} colis
-      </p>
-      <Cascade className="grille-tarifs">
-        {(devis?.grille ?? []).map((ligne) => (
-          <CarteTarif
-            key={ligne.id}
-            format={ligne}
-            poids={ligne.poidsMaxKg ? poidsLisible(ligne.poidsMaxKg) : null}
-            dimensions={dimensionsLisibles(ligne.dimensions)}
-            montant={ligne.prixColis}
-          />
-        ))}
-      </Cascade>
-
-      <Carte style={{ padding: 16, marginTop: 10 }}>
+      <Carte style={{ padding: 16, marginTop: 14 }}>
         {(devis?.montantSupplement ?? 0) > 0 && (
           <div className="rangee" style={{ gap: 10, fontSize: 14, marginBottom: 10 }}>
             <span className="extensible texte-secondaire">
@@ -144,8 +130,8 @@ export default function EnvoiRecapPage() {
         </div>
         <div style={{ marginTop: 12 }}>
           <EncadreInfo icone={Scale}>
-            Le prix réel est fixé au dépôt, d’après le poids et les dimensions de chaque colis. Vous l’acceptez avec un code reçu
-            par SMS ; s’il ne vous convient pas, l’envoi est annulé sans frais.
+            Le prix réel est fixé au dépôt, d’après le poids et les dimensions de chaque colis. Vous l’acceptez sur place ; s’il ne
+            vous convient pas, l’envoi est annulé sans frais.
           </EncadreInfo>
         </div>
       </Carte>
