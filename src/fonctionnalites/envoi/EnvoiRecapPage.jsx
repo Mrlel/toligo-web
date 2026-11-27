@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { HandCoins, Scale, Store, Warehouse } from 'lucide-react';
+import { HandCoins, Package, Store, Truck, Warehouse } from 'lucide-react';
 
-import { BarreEtapes, Bouton, Carte, EncadreInfo, EnTete, Option, Page, PiedDAction, useMessages } from '../../composants';
+import { BarreEtapes, Bouton, Carte, EnTete, Option, Page, PiedDAction, useMessages } from '../../composants';
 import { Routes } from '../../commun/routes';
 import { useSession } from '../../session/Session';
 import { distance, prenom, prix } from '../../utils/formatage';
@@ -57,14 +57,6 @@ export default function EnvoiRecapPage() {
     }
   }
 
-  const station = devis?.stationArrivee;
-  const detailReception = [
-    libelleModeReception(commande.modeReception),
-    station ? station.nom : null,
-    devis?.distanceKm != null ? `${distance(devis.distanceKm)} de la station` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
 
   return (
     <Page
@@ -95,17 +87,10 @@ export default function EnvoiRecapPage() {
           dernier
         />
 
-        <p className="texte-secondaire" style={{ fontSize: 12.5, margin: '4px 0 0' }}>
-          {detailReception}
-        </p>
-
-        <div className="encadre-info" style={{ fontSize: 12.5, marginTop: 12 }}>
-          <Warehouse size={18} aria-hidden="true" />
-          <span>
-            {site
-              ? `Dépôt à ${site.nom}${site.adresse ? ` (${site.adresse})` : ''}.`
-              : 'Dépôt dans l’entrepôt Tôligo le plus proche de chez vous, indiqué à la confirmation.'}
-          </span>
+        <div className="recap-lignes">
+          <LigneRecap icone={Warehouse} libelle="Dépôt" valeur={site ? site.nom : 'Le plus proche'} />
+          <LigneRecap icone={Truck} libelle="Remise" valeur={libelleModeReception(commande.modeReception)} />
+          <LigneRecap icone={Package} libelle="Colis" valeur={`${nbColis} colis`} />
         </div>
       </Carte>
 
@@ -120,28 +105,20 @@ export default function EnvoiRecapPage() {
           </div>
         )}
         <div className="estimation">
-          <h3>
-            Estimation
-            <span className="texte-secondaire" style={{ display: 'block', fontSize: 12.5, fontWeight: 500 }}>
-              {nbColis} colis{(devis?.montantSupplement ?? 0) > 0 ? ', supplément compris' : ''}
-            </span>
-          </h3>
+          <h3>Estimation</h3>
           <strong>{devis ? fourchetteLisible(devis.estimation) : '—'}</strong>
         </div>
-        <div style={{ marginTop: 12 }}>
-          <EncadreInfo icone={Scale}>
-            Le prix réel est fixé au dépôt, d’après le poids et les dimensions de chaque colis. Vous l’acceptez sur place ; s’il ne
-            vous convient pas, l’envoi est annulé sans frais.
-          </EncadreInfo>
-        </div>
+        <p className="envoi__note" style={{ marginTop: 6 }}>
+          Prix final fixé à la pesée, au dépôt.
+        </p>
       </Carte>
 
-      <h2 style={{ fontSize: 16, margin: '18px 0 10px' }}>Qui paie l’envoi ?</h2>
+      <h2 style={{ fontSize: 16, margin: '18px 0 10px' }}>Qui paie ?</h2>
       <div className="pile" style={{ gap: 8 }}>
         <OptionReglement
           icone={Store}
           titre="Je paie au dépôt"
-          detail="En espèces ou par Mobile Money (Wave, Orange, MTN), une fois le prix réel accepté"
+          detail="Espèces ou Mobile Money"
           choisie={surPlace}
           onClick={() => choisirModeReglement('sur_place')}
         />
@@ -150,7 +127,7 @@ export default function EnvoiRecapPage() {
           titre="Paiement à la livraison"
           detail={
             aLaLivraisonPossible
-              ? `${prenom(commande.destinataireNom)} paie à la remise. Le montant lui est envoyé par SMS dès le dépôt.`
+              ? `${prenom(commande.destinataireNom)} paie à la remise`
               : (profil?.motifPaiementALaLivraison ?? 'Indisponible pour votre compte')
           }
           choisie={!surPlace}
@@ -158,14 +135,19 @@ export default function EnvoiRecapPage() {
           onClick={() => choisirModeReglement('a_la_livraison')}
         />
       </div>
-      {!surPlace && (
-        <div style={{ marginTop: 10 }}>
-          <EncadreInfo>
-            Si le destinataire refuse deux fois de payer, le colis vous est retourné et les frais de retour sont à votre charge.
-          </EncadreInfo>
-        </div>
-      )}
+      {!surPlace && <p className="envoi__note">Après 2 refus de payer, le colis vous revient (frais de retour à votre charge).</p>}
     </Page>
+  );
+}
+
+/** Ligne du récapitulatif : icône, libellé, valeur. */
+function LigneRecap({ icone: Icone, libelle, valeur }) {
+  return (
+    <div className="recap-ligne">
+      <Icone size={18} aria-hidden="true" />
+      <span className="recap-ligne__libelle">{libelle}</span>
+      <span className="recap-ligne__valeur une-ligne">{valeur}</span>
+    </div>
   );
 }
 

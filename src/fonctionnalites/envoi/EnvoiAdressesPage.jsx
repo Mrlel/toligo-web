@@ -78,7 +78,6 @@ export default function EnvoiAdressesPage() {
     >
       <BarreEtapes etapes={etapesEnvoi(brouillon)} courante={0} />
       <h2 className="envoi__question">Qui reçoit vos colis ?</h2>
-      <p className="envoi__sous-titre">Vérifiez votre adresse, ajoutez le destinataire</p>
 
       {/* Le trajet : l'expéditeur, puis le destinataire, reliés par un pointillé. */}
       <Carte sansMarge className="trajet-envoi">
@@ -94,7 +93,7 @@ export default function EnvoiAdressesPage() {
           lignes={
             collecte
               ? [collecte.adresse, `${collecte.nomContact} · ${afficherTelephone(collecte.telephone)}`]
-              : ['Vous déposerez vos colis dans un entrepôt Tôligo près de cette adresse.']
+              : ['Choisissez votre adresse']
           }
           action={collecte ? 'Changer' : 'Choisir'}
           onAction={() => naviguer(Routes.envoiCollecte)}

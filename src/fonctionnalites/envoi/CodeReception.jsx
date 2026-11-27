@@ -56,10 +56,6 @@ export function CodeReception({ code, expireLe, site }) {
         </div>
       )}
 
-      <p className="code-reception__aide">
-        Présentez-vous avec vos colis et donnez ce code au gestionnaire de l’entrepôt : il les pèse, les mesure et vous propose le
-        prix réel.
-      </p>
     </div>
   );
 }

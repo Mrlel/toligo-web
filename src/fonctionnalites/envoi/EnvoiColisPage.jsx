@@ -1,7 +1,7 @@
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Minus, Plus, Scale } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 
-import { BarreEtapes, Bouton, Cascade, EncadreInfo, EnTete, Page, PiedDAction, VueDonnees } from '../../composants';
+import { BarreEtapes, Bouton, Cascade, EnTete, Page, PiedDAction, VueDonnees } from '../../composants';
 import { dimensionsLisibles, listerFormats, poidsLisible } from '../../commun/formats';
 import { Routes } from '../../commun/routes';
 import { prenom } from '../../utils/formatage';
@@ -55,7 +55,7 @@ export default function EnvoiColisPage() {
       <h2 className="envoi__question" style={{ marginTop: 12 }}>
         Combien de colis envoyez-vous ?
       </h2>
-      <p className="envoi__sous-titre">Pour {prenom(destinataire.nom)} · pas besoin de les peser, c’est fait au dépôt</p>
+      <p className="envoi__sous-titre">Pour {prenom(destinataire.nom)}</p>
 
       <div className="compteur-colis" style={{ marginTop: 16 }}>
         <button
@@ -92,7 +92,7 @@ export default function EnvoiColisPage() {
       </div>
 
       <p className="etiquette-section" style={{ margin: '22px 0 10px', fontSize: 13, letterSpacing: 0.6 }}>
-        Tarifs indicatifs par colis
+        Prix par colis
       </p>
       <VueDonnees etat={formats}>
         {(liste) => (
@@ -110,12 +110,7 @@ export default function EnvoiColisPage() {
         )}
       </VueDonnees>
 
-      <div style={{ marginTop: 14 }}>
-        <EncadreInfo icone={Scale}>
-          Au dépôt, le gestionnaire pèse et mesure chaque colis devant vous : le format et le prix réel en découlent. Vous
-          acceptez ce prix sur place. S’il ne vous convient pas, l’envoi est annulé sans frais.
-        </EncadreInfo>
-      </div>
+      <p className="envoi__note">Format et prix final fixés à la pesée, au dépôt.</p>
     </Page>
   );
 }

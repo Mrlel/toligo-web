@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
-import { Check, MapPin, Search, Smartphone, Trash2 } from 'lucide-react';
+import { Check, MapPin, Search, Trash2 } from 'lucide-react';
 
 import { AvatarInitiales, Bouton, Champ, ChampTelephone, EnTete, Page, PiedDAction, teinteDuRang, useRetour } from '../../composants';
 import { Routes } from '../../commun/routes';
@@ -170,19 +170,6 @@ function FormulaireDestinataire({ position, existant }) {
           {erreurs.lieu && <p className="champ__erreur">{erreurs.lieu}</p>}
         </div>
 
-        <div className="rangee" style={{ gap: 12, marginTop: 2 }}>
-          <span className="rond-icone">
-            <Smartphone size={19} />
-          </span>
-          <div>
-            <p className="demi-gras" style={{ fontSize: 14.5 }}>
-              SMS au destinataire
-            </p>
-            <p className="texte-secondaire" style={{ fontSize: 12.5 }}>
-              Code de retrait et, s’il paie à la livraison, le montant à régler
-            </p>
-          </div>
-        </div>
       </form>
 
       <ChoixLieu

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Store, Truck } from 'lucide-react';
 
-import { BarreEtapes, Bouton, Cascade, EncadreInfo, EnTete, IconeBox, Option, Page, PiedDAction, useMessages } from '../../composants';
+import { BarreEtapes, Bouton, Cascade, EnTete, IconeBox, Option, Page, PiedDAction, useMessages } from '../../composants';
 import { Routes } from '../../commun/routes';
 import { prenom } from '../../utils/formatage';
 import { MODES_RECEPTION, refusDuLieuDeDepot } from './api';
@@ -54,14 +54,7 @@ export default function EnvoiReceptionPage() {
       titre="Nouvel envoi"
       entete={<EnTete titre="Nouvel envoi" gris repli={Routes.envoiDepot} />}
       pied={
-        <PiedDAction
-          arrondi
-          entete={
-            <span className="extensible texte-secondaire" style={{ fontSize: 13.5 }}>
-              {brouillon.nbColis} colis pour {prenom(destinataire.nom)}
-            </span>
-          }
-        >
+        <PiedDAction arrondi>
           <Bouton enCours={enCours} onClick={continuer}>
             Continuer
           </Bouton>
@@ -70,11 +63,10 @@ export default function EnvoiReceptionPage() {
     >
       <BarreEtapes etapes={etapesEnvoi(brouillon)} courante={3} />
       <h2 className="envoi__question" style={{ marginTop: 12 }}>
-        Comment remettre vos colis à {prenom(destinataire.nom)} ?
+        Comment {prenom(destinataire.nom)} reçoit-il ses colis ?
       </h2>
-      <p className="envoi__sous-titre">Tôligo choisit les stations et le trajet, camion ou drone</p>
 
-      <Cascade className="choix-grille" style={{ marginTop: 14 }}>
+      <Cascade className="pile" style={{ gap: 10, marginTop: 14 }}>
         {MODES_RECEPTION.map((mode) => {
           const Icone = ICONES[mode.code];
           const choisi = brouillon.modeReception === mode.code;
@@ -88,7 +80,7 @@ export default function EnvoiReceptionPage() {
                   <p className="demi-gras" style={{ fontSize: 15 }}>
                     {mode.libelle}
                   </p>
-                  <p className="texte-secondaire" style={{ fontSize: 12.5, marginTop: 2, lineHeight: 1.35 }}>
+                  <p className="texte-secondaire" style={{ fontSize: 12.5, marginTop: 2 }}>
                     {mode.detail}
                   </p>
                 </div>
@@ -98,9 +90,6 @@ export default function EnvoiReceptionPage() {
         })}
       </Cascade>
 
-      <div style={{ marginTop: 14 }}>
-        <EncadreInfo>L’estimation, supplément compris, s’affiche à l’étape suivante. Le prix réel est fixé au dépôt.</EncadreInfo>
-      </div>
     </Page>
   );
 }

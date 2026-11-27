@@ -2,22 +2,14 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BellRing, Check, Copy } from 'lucide-react';
 
-import { Bouton, Carte, EncadreInfo, IconeBox, Page, Pastille, PiedDAction, useMessages, VueDonnees } from '../../composants';
+import { Bouton, Carte, IconeBox, Page, Pastille, PiedDAction, useMessages, VueDonnees } from '../../composants';
 import { Routes } from '../../commun/routes';
 import { prenom, prix } from '../../utils/formatage';
 import { useDonnees } from '../../utils/useDonnees';
-import { detailCommande, libelleModeReception, reactiverCommande } from './api';
+import { detailCommande, reactiverCommande } from './api';
 import { fourchetteLisible } from './ColisCommun';
 import { CodeReception } from './CodeReception';
 import './envoi.css';
-
-/** « Livraison à domicile depuis la Station Plateau. » */
-function phraseReception(mode, station) {
-  if (!station) return `${libelleModeReception(mode)}.`;
-  if (mode === 'livraison_domicile') return `Livraison à domicile depuis ${station}.`;
-  if (mode === 'box_stockage') return `Box de stockage près de ${station}.`;
-  return `Retrait à ${station}.`;
-}
 
 /**
  * Envoi confirmé (mise à jour du 26/11/2026) : le code de dépôt, valable
@@ -74,7 +66,6 @@ export default function CommandeConfirmeePage() {
           const aLaLivraison = donnees.modeReglement === 'a_la_livraison';
           const code = donnees.codeReception;
           const expiree = donnees.statut === 'expiree';
-          const nbColis = donnees.nbColisDeclares ?? donnees.colis.length;
 
           return (
             <div className="confirmee">
@@ -88,55 +79,18 @@ export default function CommandeConfirmeePage() {
                 )}
               </div>
               <h1 style={{ fontSize: 26, letterSpacing: -0.4, marginTop: 20 }}>{expiree ? 'Envoi expiré' : 'Envoi confirmé'}</h1>
-              <p className="texte-secondaire" style={{ fontSize: 15, lineHeight: 1.5, marginTop: 8 }}>
-                {expiree
-                  ? 'Vos colis n’ont pas été déposés dans les 48 h. Réactivez l’envoi pour obtenir un nouveau code.'
-                  : 'Apportez vos colis à l’entrepôt dans les 48 h et donnez votre code de dépôt au gestionnaire.'}
+              <p className="texte-secondaire" style={{ fontSize: 15, marginTop: 6 }}>
+                {expiree ? 'Code de dépôt périmé' : 'Déposez vos colis sous 48 h'}
               </p>
 
               <div style={{ marginTop: 20 }}>
                 {expiree && (
-                  <div className="pile" style={{ gap: 8, textAlign: 'left' }}>
-                    <EncadreInfo accent icone={BellRing}>
-                      Le code de dépôt n’est plus valable. La réactivation vous en donne un nouveau, valable 48 h.
-                    </EncadreInfo>
-                    <Bouton variante="accent" enCours={reactivation} onClick={reactiver}>
-                      Réactiver l’envoi
-                    </Bouton>
-                  </div>
+                  <Bouton variante="accent" icone={BellRing} enCours={reactivation} onClick={reactiver}>
+                    Réactiver l’envoi
+                  </Bouton>
                 )}
                 {!expiree && code && <CodeReception code={code.code} expireLe={code.expireLe} site={donnees.siteDepot} />}
               </div>
-
-              {!expiree && (
-                <Carte style={{ padding: 16, marginTop: 16, textAlign: 'left' }}>
-                  <p className="etiquette-section" style={{ fontSize: 13, letterSpacing: 0.6, marginBottom: 12 }}>
-                    Au comptoir de l’entrepôt
-                  </p>
-                  <ol className="etapes-depot">
-                    <li>
-                      <span className="etapes-depot__numero">1</span>
-                      <span>Donnez votre code de dépôt au gestionnaire.</span>
-                    </li>
-                    <li>
-                      <span className="etapes-depot__numero">2</span>
-                      <span>Il pèse et mesure chaque colis : le format et le prix réel en découlent.</span>
-                    </li>
-                    <li>
-                      <span className="etapes-depot__numero">3</span>
-                      <span>Le gestionnaire vous annonce le prix : acceptez-le sur place. Sinon, l’envoi est annulé sans frais.</span>
-                    </li>
-                    <li>
-                      <span className="etapes-depot__numero">4</span>
-                      <span>
-                        {aLaLivraison
-                          ? `${prenom(donnees.destinataireNom)} reçoit par SMS le montant à payer à la livraison et son code de retrait.`
-                          : 'Vous payez en espèces ou par Mobile Money (Wave, Orange, MTN).'}
-                      </span>
-                    </li>
-                  </ol>
-                </Carte>
-              )}
 
               <Carte style={{ padding: 16, marginTop: 16, textAlign: 'left' }}>
                 <div className="rangee" style={{ gap: 8 }}>
@@ -153,9 +107,11 @@ export default function CommandeConfirmeePage() {
                     </span>
                     <p className="extensible demi-gras" style={{ fontSize: 14.5 }}>
                       Colis {i + 1}
-                      <span className="texte-secondaire" style={{ display: 'block', fontSize: 12.5, fontWeight: 500 }}>
-                        {colis.format ? colis.format.libelle : 'Format fixé au dépôt'}
-                      </span>
+                      {colis.format && (
+                        <span className="texte-secondaire" style={{ display: 'block', fontSize: 12.5, fontWeight: 500 }}>
+                          {colis.format.libelle}
+                        </span>
+                      )}
                     </p>
                     <button type="button" className="code-suivi" onClick={() => copier(colis.codeSuivi, 'Numéro de suivi')} title="Copier le numéro de suivi">
                       {colis.codeSuivi}
@@ -167,7 +123,7 @@ export default function CommandeConfirmeePage() {
                 <hr className="separateur" style={{ margin: '12px 0' }} />
                 <div className="rangee" style={{ gap: 12, fontSize: 14 }}>
                   <span className="extensible texte-secondaire">
-                    {aLaLivraison ? 'À payer par le destinataire à la livraison' : 'À payer au dépôt'}
+                    {aLaLivraison ? `Payé par ${prenom(donnees.destinataireNom)} à la livraison` : 'À payer au dépôt'}
                   </span>
                   <span className="gras">
                     {donnees.montantDefinitif || !donnees.estimation
@@ -177,17 +133,10 @@ export default function CommandeConfirmeePage() {
                 </div>
                 {!donnees.montantDefinitif && (
                   <p className="texte-secondaire" style={{ fontSize: 12.5, marginTop: 4 }}>
-                    Estimation pour {nbColis} colis : le prix réel est fixé au dépôt.
+                    Estimation · prix final à la pesée
                   </p>
                 )}
               </Carte>
-
-              <div style={{ marginTop: 16, textAlign: 'left' }}>
-                <EncadreInfo>
-                  {phraseReception(donnees.modeReception, donnees.stationArrivee?.nom)} {prenom(donnees.destinataireNom)} reçoit un SMS
-                  à chaque étape importante.
-                </EncadreInfo>
-              </div>
             </div>
           );
         }}

@@ -359,10 +359,9 @@
 
 .choix-carte {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-  height: 100%;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
 }
 
 .choix-carte__prix {
@@ -814,4 +813,64 @@ a.code-suivi {
   color: var(--blanc);
   font-size: 13px;
   font-weight: 700;
+}
+
+/* ------------------------------------------------------------------------
+   Parcours épuré (27/11/2026) : notes d'une ligne, distance, récapitulatif.
+   ------------------------------------------------------------------------ */
+.envoi__note {
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: var(--texte-secondaire);
+}
+
+/* Distance d'un entrepôt, à droite de l'option. */
+.distance-site {
+  flex: none;
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: var(--rayon-pilule);
+  background: var(--surface);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.choix-carte .extensible {
+  flex: 1;
+}
+
+/* Récapitulatif : Dépôt · Remise · Colis. */
+.recap-lignes {
+  display: flex;
+  flex-direction: column;
+  margin-top: 14px;
+  padding-top: 6px;
+  border-top: 1px solid var(--bordure-legere);
+}
+
+.recap-ligne {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  font-size: 14px;
+}
+
+.recap-ligne svg {
+  flex: none;
+  color: var(--texte-secondaire);
+}
+
+.recap-ligne__libelle {
+  flex: none;
+  width: 64px;
+  color: var(--texte-secondaire);
+}
+
+.recap-ligne__valeur {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  text-align: right;
 }

@@ -46,10 +46,10 @@ export function ChoixDepot({ position, choix, onChoisir, avecAutomatique = true 
             </span>
             <div>
               <p className="demi-gras" style={{ fontSize: 15 }}>
-                Laisser Tôligo choisir
+                Le plus proche
               </p>
-              <p className="texte-secondaire" style={{ fontSize: 12.5, marginTop: 2, lineHeight: 1.35 }}>
-                L’entrepôt le plus proche de votre adresse.
+              <p className="texte-secondaire" style={{ fontSize: 12.5, marginTop: 2 }}>
+                Choisi par Tôligo
               </p>
             </div>
           </div>
@@ -66,20 +66,21 @@ export function ChoixDepot({ position, choix, onChoisir, avecAutomatique = true 
 
       {sites.map((site) => (
         <Option key={site.id} choisie={choix?.site?.id === site.id} onClick={() => onChoisir({ site })}>
-          <div>
-            <p className="demi-gras" style={{ fontSize: 15 }}>
-              {site.nom}
-            </p>
-            {site.adresse && (
-              <p className="texte-secondaire" style={{ fontSize: 12.5, marginTop: 2 }}>
-                {site.adresse}
+          <div className="choix-carte">
+            <span className={`rond-icone${choix?.site?.id === site.id ? ' rond-icone--noir' : ''}`}>
+              <Warehouse size={19} />
+            </span>
+            <div className="extensible" style={{ minWidth: 0 }}>
+              <p className="demi-gras une-ligne" style={{ fontSize: 15 }}>
+                {site.nom}
               </p>
-            )}
-            {site.distanceKm != null && (
-              <p className="texte-secondaire" style={{ fontSize: 12.5, marginTop: 2 }}>
-                {distance(site.distanceKm)}
-              </p>
-            )}
+              {site.adresse && (
+                <p className="texte-secondaire une-ligne" style={{ fontSize: 12.5, marginTop: 2 }}>
+                  {site.adresse}
+                </p>
+              )}
+            </div>
+            {site.distanceKm != null && <span className="distance-site">{distance(site.distanceKm)}</span>}
           </div>
         </Option>
       ))}

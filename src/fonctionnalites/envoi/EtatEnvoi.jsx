@@ -86,7 +86,7 @@ export function rangDestinataire(brouillon, nom) {
 
 /** Étapes affichées en haut du parcours. */
 export function etapesEnvoi() {
-  return ['Adresses', 'Colis', 'Dépôt', 'Réception', 'Confirmation'];
+  return ['Trajet', 'Colis', 'Dépôt', 'Remise', 'Valider'];
 }
 
 /** Corps de POST /client/commandes : destinataire, mode et nombre de colis. */

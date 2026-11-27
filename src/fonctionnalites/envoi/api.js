@@ -18,17 +18,17 @@ export const MODES_RECEPTION = [
   {
     code: 'retrait_station',
     libelle: 'Retrait en station',
-    detail: 'Le destinataire vient chercher le colis à la station Tôligo la plus proche de chez lui.',
+    detail: 'À la station la plus proche',
   },
   {
     code: 'livraison_domicile',
     libelle: 'Livraison à domicile',
-    detail: 'Un livreur Tôligo apporte le colis. Supplément selon la distance.',
+    detail: 'Supplément selon la distance',
   },
   {
     code: 'box_stockage',
     libelle: 'Box de stockage',
-    detail: 'Le colis est déposé dans un box ; le destinataire reçoit un code. Supplément de location.',
+    detail: 'Code envoyé · supplément de location',
   },
 ];
 
